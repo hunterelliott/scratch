@@ -100,8 +100,8 @@ with tf.device("/job:ps/task:0/cpu:0"):
   queue = tf.train.string_input_producer(fileList,capacity=batch_size*10,shared_name=
     'shared_file_queue',num_epochs=1,shuffle=False)
   
-  image = get_image(queue)
-  images = tf.train.batch([image],batch_size,num_threads=4,capacity=batch_size*6,shapes=[256,256,3],shared_name='shared_batch_queue')
+  #image = get_image(queue)
+  #images = tf.train.batch([image],batch_size,num_threads=4,capacity=batch_size*6,shapes=[256,256,3],shared_name='shared_batch_queue')
 
 
 sess_config = tf.ConfigProto()
@@ -133,6 +133,8 @@ elif job_name == "worker":
 
     print("Starting worker process " + str(task_ind) + "...")
 
+    image = get_image(queue)
+
     sess = tf.Session(server.target,config=sess_config)        
     
 
@@ -147,14 +149,17 @@ elif job_name == "worker":
 
         #Get a batch of images
 
-        ims = sess.run(tf.image.resize_images(images,[128, 128]))
+        #ims = sess.run(tf.image.resize_images(images,[128, 128]))
+
+
+        im = sess.run(image)
 
         #Run inference on them
         #pred = sess.run(predict)
 
 
-        nIm_proc += ims.shape[0]
-        #nIm_proc += 1
+        #nIm_proc += ims.shape[0]
+        nIm_proc += 1
 
         if nIm_proc%(10*batch_size) == 0:
           print("Finished " + str(nIm_proc) + " images")
