@@ -34,7 +34,7 @@ with tf.device('/cpu:0'), tf.Session() as sess:
 	writer_opts = tf.python_io.TFRecordOptions(2)#Set compression to zlib
 	writer = tf.python_io.TFRecordWriter(args.output,options=writer_opts)
 
-	for i in range(nIms):
+	for i in range(5000):
 
 
 		#Read the image and encode to jpeg. 
@@ -54,6 +54,6 @@ with tf.device('/cpu:0'), tf.Session() as sess:
 		if i%50 == 0:
 			print("Finished image " + str(i) + " of " + str(nIms))
 
-writer.close()
+	writer.close()
 endTime = time.time();
 print("Finished conversion. Elapsed time: " + str(endTime-startTime) + " seconds.")
