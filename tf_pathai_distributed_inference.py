@@ -2,7 +2,7 @@ import tensorflow as tf
 import argparse
 import sys
 import os
-
+import time
 
 # ---- input ---- #
 
@@ -98,15 +98,15 @@ with tf.device("/job:ps/task:0/cpu:0"):
 
   #Initialize the file queues on the parameter server
   queue = tf.train.string_input_producer(fileList,capacity=batch_size*10,shared_name=
-    'shared_queue',num_epochs=1,shuffle=False)
+    'shared_file_queue',num_epochs=1,shuffle=False)
   
-
+  image = get_image(queue)
+  images = tf.train.batch([image],batch_size,num_threads=4,capacity=batch_size*6,shapes=[256,256,3],shared_name='shared_batch_queue')
 
 
 sess_config = tf.ConfigProto()
 sess_config.gpu_options.allow_growth=True    #TEMP - for testing minimize memory use
 
-#sess = tf.Session(server.target,config=sess_config)
 
 coord = tf.train.Coordinator()
 
@@ -133,36 +133,28 @@ elif job_name == "worker":
 
     print("Starting worker process " + str(task_ind) + "...")
 
-    sess = tf.Session(server.target,config=sess_config)
-    sess.run(tf.local_variables_initializer()) #Queue runners need local variables initialized
-    
-    
-    #Define operations for retrieving an image and a batch of images
-    image = get_image(queue)
-    #images = tf.train.batch([image],batch_size,num_threads=4,capacity=batch_size*6,shapes=[256,256,3])
+    sess = tf.Session(server.target,config=sess_config)        
     
 
     # -- process the images!
 
+    print("Starting inference...")
+    start_time = time.time()
     try:
     
       nIm_proc = 0
       while not(coord.should_stop()):
 
         #Get a batch of images
-        #ims = sess.run(images)
-        #ims = sess.run(tf.image.resize_images(ims,[128, 128]))
 
-        #ims = sess.run(tf.image.resize_images(images,[128, 128]))
-
-        im  = sess.run(image)
+        ims = sess.run(tf.image.resize_images(images,[128, 128]))
 
         #Run inference on them
-        #pred = sess.run(predict,feed_dict={data:ims})
+        #pred = sess.run(predict)
 
 
-        #nIm_proc += ims.shape[0]
-        nIm_proc += 1
+        nIm_proc += ims.shape[0]
+        #nIm_proc += 1
 
         if nIm_proc%(10*batch_size) == 0:
           print("Finished " + str(nIm_proc) + " images")
@@ -173,9 +165,10 @@ elif job_name == "worker":
     finally:
       coord.request_stop()
 
+    end_time = time.time()
+    print("Done, took " + str(end_time-start_time) + " seconds")
 
-  #coord.join(threads)
-  #sess.close()
+
 
 
 
