@@ -49,6 +49,8 @@ allTestIms = caffe_preProcessFolders(testDir,{'WT','crispr','Cyto'},'windowSize'
 
 %% Train - augmented
 
+%TEMP - had to move train images to spindle drive for space
+trainDir = '/shared/NIH_Classification/Train'
 allTrainIms = caffe_preProcessFolders(trainDir,{'WT','crispr','Cyto'},'windowSize',[256 256],'stride',[128 128],'NormMean',128,'NormVar',20^2,'varThresh',100,'numTPS',4,'numBlur',2,'numRotate',4,'augSpacing',96,'warpSize',6,'blurRange',[1.0 1.15],'OutputFile',[trainDir filesep 'train_aug.txt']);
 
 
