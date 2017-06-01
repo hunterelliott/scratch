@@ -7,6 +7,9 @@ weights =  '/ssd/Dropbox/NIH_Testing/Classification_Tests/Deadnet_on_5_16_2017_D
 
 
 
+caffe.set_mode_gpu()
+caffe.set_device(0)
+
 net = caffe.Net(model,weights,'test')
 
 inShape = net.blobs('data').shape;
@@ -15,11 +18,9 @@ batchSz = inShape(end);
 
 %% --- init -- %%
 
-caffe.set_mode_gpu()
-caffe.set_device(0)
 
 
-virtualBatchFile = '/ssd/Dropbox/NIH_Testing/Classification_Tests/Deadnet_on_5_16_2017_Data/virtual_batch.mat'
+virtualBatchFile = '/ssd/Dropbox/NIH_Testing/Classification_Tests/Deadnet_on_5_16_2017_Data/Model_for_Batch_from_220000_run0/virtual_batch.mat'
 
 makeNewVirtualBatch = true;
 if makeNewVirtualBatch
@@ -68,15 +69,20 @@ end
 
 %Training/val data
 imageDir = '/ssd/NIH_Classification/Test/A375M FMN2 crispr guide1-clone1 RGB' 
-%imageDir = '/ssd/NIH_Classification/Test/A375M WT 2D Images RGB';
-%imageDir = '/ssd/KP_Classification/Train/CPM_Inhibited_All'
+iIm = 7;
+
+imageDir = '/ssd/NIH_Classification/Test/A375M WT 2D Images RGB';
+iIm = 11;
+
+%imageDir = '/ssd/NIH_Classification/Test/A375M treated with 100nm Cyto D for 30mins RGB';
+%iIm = 2;
 
 imNames = imDir(imageDir);
 
 nIms = numel(imNames);
 
-iIm = randsample(nIms,1);
-%iIm = 1;
+%iIm = randsample(nIms,1);
+
 imNames(iIm).name
 
 im = imread([imageDir filesep imNames(iIm).name]);
