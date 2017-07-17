@@ -14,7 +14,8 @@ else:
 
 #Define checkpoint directory and inference op
 #check_dir = "/media/hunter/1E52113152110F61/shared/Training_Experiments/CycleGAN/horses2zebras/checkpoints"
-check_dir = "/media/hunter/1E52113152110F61/shared/Training_Experiments/CycleGAN/maps2sat/checkpoints"
+#check_dir = "/media/hunter/1E52113152110F61/shared/Training_Experiments/CycleGAN/maps2sat/checkpoints"
+check_dir = "/media/hunter/1E52113152110F61/shared/Training_Experiments/CycleGAN/cityscapes/checkpoints"
 #For CycleGAN A to B
 pred_name = 'Model/g_A/t1:0'
 data_name = "input_A:0"
