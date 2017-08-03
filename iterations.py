@@ -46,6 +46,7 @@ def conservation_term(X_t_0,X_t_1):
     dMdt = tf.abs(tf.reduce_sum(tf.reduce_sum(tf.reduce_sum(X_t_0, 3), 2), 1) -
                   tf.reduce_sum(tf.reduce_sum(tf.reduce_sum(X_t_1, 3), 2), 1))
 
+
     return dMdt
 
 def get_train_X(X_shape,n_X_train):
@@ -65,7 +66,7 @@ def generate_train_X(X_shape,batch_size):
 
 def scale_im(X):
 
-    contrast = 1.0
+    contrast = 4.0
     X = ((X * contrast) + 1) / 2
 
     return X
