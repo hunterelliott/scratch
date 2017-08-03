@@ -6,18 +6,14 @@ import numpy as np
 from keras import backend as K
 import matplotlib.animation as animation
 
-def transition_model(n_t,input_shape):
+def transition_model(input_shape):
 
     x = Input(shape=input_shape)
 
     transition_dim = 16
-    encode = Conv2D(transition_dim,5,padding='same',activation='tanh',name='encode_conv')
-    decode = Conv2D(input_shape[2], 5, padding='same', activation='tanh',name='decode_conv')
-
-    x_prime = x
-    for i in range(n_t):
-        h = encode(x_prime)
-        x_prime = decode(h)
+    h = Conv2D(transition_dim,5,padding='same',activation='tanh',name='encode_conv')(x)
+    #h = Conv2D(transition_dim, 5, padding='same', activation='tanh', name='encode_conv')(h)
+    x_prime = Conv2D(input_shape[2], 5, padding='same', activation='tanh',name='decode_conv')(h)
 
     model = Model(inputs=x, outputs=x_prime)
 
@@ -44,15 +40,21 @@ def get_X_t(t,C,X_t_0):
     X_t = np.squeeze(C_intermediate([X_t_0])[0])
     return X_t
 
-
-def update_anim(t,im_han,*args):
-
-    im_han.set_array(get_X_t(t,*args))
-
-
 def conservation_term(X_t_0,X_t_1):
 
     #Absolute rate of change of mass
     dMdt = tf.abs(tf.reduce_sum(X_t_0) -  tf.reduce_sum(X_t_1))
 
     return dMdt
+
+def scale_im(X):
+
+    contrast = 1.5
+    X = ((X * contrast) + 1) / 2
+
+    return X
+
+def update_anim(t,im_han,*args):
+
+    im_han.set_array(scale_im(get_X_t(t,*args)))
+
