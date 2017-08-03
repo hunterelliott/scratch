@@ -2,7 +2,7 @@ import os
 
 import tensorflow as tf
 from keras.layers import Conv2D, Input
-from keras.models import Model
+from keras.models import Model, load_model
 from keras import optimizers
 from keras import callbacks
 import matplotlib.pyplot as plt
@@ -24,35 +24,42 @@ os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 #Optimizer params
 lr = 1e-6 #Works OK for unsigned conservation
 #lr = 1e-3
-lr_decay = 1e-10
+#lr_decay = 1e-10
 lr_decay = 0
 momentum = .5
 batch_size = 256
-n_epochs = 1
-n_batch_per_epoch = 4096
+n_epochs = 3e2
+n_batch_per_epoch = 8
 
 
 # ---- Initialization --- #
-
-C = I.transition_model(im_shape)
 
 #Create X_0 for visualization
 #X_t0 = np.random.normal(0,1,(1,)+im_shape)
 X_t0 = np.zeros((1,) + im_shape)
 X_t0[0,128,128,:] = 1
 
-#optimizer = optimizers.SGD(lr=lr,decay=lr_decay,momentum=momentum)
-optimizer = optimizers.Adam(lr=lr,decay=lr_decay)
-#optimizer = optimizers.rmsprop(lr=lr,decay=lr_decay)
-C.compile(loss=I.conservation_term,optimizer=optimizer)
-cb = [callbacks.TensorBoard(log_dir='/home/hunter/Desktop/TEMP/tmp_tensorboard1',write_graph=False)]
-#cb = cb + [callbacks.ReduceLROnPlateau(monitor='loss',factor=.75)]
+restore = True
+
+if not restore:
+
+    C = I.transition_model(im_shape)
+
+    #optimizer = optimizers.SGD(lr=lr,decay=lr_decay,momentum=momentum)
+    optimizer = optimizers.Adam(lr=lr,decay=lr_decay)
+    #optimizer = optimizers.rmsprop(lr=lr,decay=lr_decay)
+    C.compile(loss=I.conservation_term,optimizer=optimizer)
+    cb = [callbacks.TensorBoard(log_dir='/home/hunter/Desktop/TEMP/tmp_tensorboard1',write_graph=False)]
+    cb = cb + [callbacks.ReduceLROnPlateau(monitor='loss',factor=.5,patience=2)]
 
 
-# ---- Optimization ---- #
+    # ---- Optimization ---- #
 
-# Optimize the transition model
-C.fit_generator(I.generate_train_X(im_shape,batch_size),n_batch_per_epoch,epochs=n_epochs,callbacks=cb,max_q_size=128)
+    # Optimize the transition model
+    #C.fit_generator(I.generate_train_X(im_shape,batch_size),n_batch_per_epoch,epochs=n_epochs,callbacks=cb,max_q_size=128)
+else:
+
+    C = load_model('/media/hunter/1E52113152110F61/shared/Training_Experiments/Iteration/Transition_Models/v0_h16dim_conservation/model0.h5',custom_objects={'conservation_term':I.conservation_term})
 
 # ---- Iteration ----- #
 
@@ -79,7 +86,7 @@ for t in range(n_t):
 fig = plt.figure(2)
 plt.plot(tot_mass)
 
-
+#C.save('/media/hunter/1E52113152110F61/shared/Training_Experiments/Iteration/Transition_Models/v0_h16dim_conservation/model0.h5')
 
 plt.show()
 jkl=1
