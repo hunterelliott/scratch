@@ -31,6 +31,9 @@ batch_size = 32
 n_epochs = 1e1
 n_batch_per_epoch = 8
 
+#Visualization params
+contrast = -1000
+
 
 # ---- Initialization --- #
 
@@ -38,6 +41,7 @@ n_batch_per_epoch = 8
 #X_t0 = np.random.normal(0,1,(1,)+im_shape)
 X_t0 = np.zeros((1,) + im_shape)
 X_t0[0,128,128,:] = 1
+X_t0[0,160,160,0] = 1
 
 restore = True
 
@@ -63,7 +67,10 @@ if not restore:
 else:
 
     #C = load_model('/media/hunter/1E52113152110F61/shared/Training_Experiments/Iteration/Transition_Models/v0_h16dim_conservation/model0.h5',custom_objects={'conservation_term':I.conservation_term})
+    #R = load_model('/media/hunter/1E52113152110F61/shared/Training_Experiments/Iteration/Iteration_Models/v0_h32dim_nt32_conservation/model0.h5',custom_objects={'conservation_term':I.conservation_term})
     R = load_model('/media/hunter/1E52113152110F61/shared/Training_Experiments/Iteration/Iteration_Models/v0_h16dim_nt32_conservation/model0.h5',custom_objects={'conservation_term':I.conservation_term})
+
+
 # ---- Iteration ----- #
 
 
@@ -73,9 +80,8 @@ else:
 
 fig = plt.figure()
 t_0 = 0
-im_han = plt.imshow(I.scale_im(I.get_X_t(t_0,R,X_t0)) ,clim=(-1, 1))
-plt.colorbar()
-ani = animation.FuncAnimation(fig,I.update_anim,fargs=(im_han,R,X_t0),frames=n_t,interval = 250)
+im_han = plt.imshow(I.scale_im(I.get_X_t(t_0,R,X_t0),contrast) ,clim=(-1, 1))
+ani = animation.FuncAnimation(fig,I.update_anim,fargs=(contrast,im_han,R,X_t0),frames=n_t,interval = 250)
 
 # ---- Trend visualization --- #
 
@@ -90,7 +96,8 @@ fig = plt.figure(2)
 plt.plot(tot_mass)
 
 #C.save('/media/hunter/1E52113152110F61/shared/Training_Experiments/Iteration/Transition_Models/v0_h16dim_conservation/model0.h5')
-R.save('/media/hunter/1E52113152110F61/shared/Training_Experiments/Iteration/Iteration_Models/v0_h16dim_nt32_conservation/model0.h5')
+#R.save('/media/hunter/1E52113152110F61/shared/Training_Experiments/Iteration/Iteration_Models/v0_h16dim_nt32_conservation/model0.h5')
+#R.save('/media/hunter/1E52113152110F61/shared/Training_Experiments/Iteration/Iteration_Models/v0_h32dim_nt32_conservation/model0.h5')
 
 plt.show()
 jkl=1

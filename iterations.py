@@ -10,7 +10,7 @@ def transition_model(input_shape):
 
     x = Input(shape=input_shape)
 
-    transition_dim = 16
+    transition_dim = 32
     h = Conv2D(transition_dim,5,padding='same',activation='tanh',name='encode_conv')(x)
     #h = Conv2D(transition_dim, 5, padding='same', activation='tanh', name='encode_conv')(h)
     x_prime = Conv2D(input_shape[2], 5, padding='same', activation='tanh',name='decode_conv')(h)
@@ -64,14 +64,17 @@ def generate_train_X(X_shape,batch_size):
         yield (X,X)
 
 
-def scale_im(X):
+def scale_im(X,contrast=1.0):
 
-    contrast = 4.0
-    X = ((X * contrast) + 1) / 2
+    if contrast > 0:
+        X = X * contrast
+    else:
+        X = np.tanh(X * contrast)
 
+    X = (X + 1) / 2
     return X
 
-def update_anim(t,im_han,*args):
+def update_anim(t,contrast,im_han,*args):
 
-    im_han.set_array(scale_im(get_X_t(t,*args)))
+    im_han.set_array(scale_im(get_X_t(t,*args),contrast))
 
