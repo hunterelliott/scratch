@@ -28,7 +28,8 @@ lr = 1e-6 #Works OK for unsigned conservation
 lr_decay = 0
 momentum = .5
 batch_size = 32
-n_epochs = 1e1
+n_epochs = 1e2
+#n_epochs = 0
 n_batch_per_epoch = 8
 
 #Visualization params
@@ -43,7 +44,7 @@ X_t0 = np.zeros((1,) + im_shape)
 X_t0[0,128,128,:] = 1
 X_t0[0,160,160,0] = 1
 
-restore = True
+restore = False
 
 if not restore:
 
@@ -61,8 +62,8 @@ if not restore:
     # ---- Optimization ---- #
 
     # Optimize the transition model
-
-    R.fit_generator(I.generate_train_X(im_shape, batch_size), n_batch_per_epoch, epochs=n_epochs, callbacks=cb,max_q_size=128)
+    if n_epochs > 0:
+        R.fit_generator(I.generate_train_X(im_shape, batch_size), n_batch_per_epoch, epochs=n_epochs, callbacks=cb,max_q_size=128)
     #C.fit_generator(I.generate_train_X(im_shape,batch_size),n_batch_per_epoch,epochs=n_epochs,callbacks=cb,max_q_size=128)
 else:
 

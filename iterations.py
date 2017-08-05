@@ -1,5 +1,5 @@
 import tensorflow as tf
-from keras.layers import Conv2D, Input
+from keras.layers import Conv2D, Input, Conv2DTranspose
 from keras.models import Model
 import matplotlib.pyplot as plt
 import numpy as np
@@ -10,10 +10,16 @@ def transition_model(input_shape):
 
     x = Input(shape=input_shape)
 
-    transition_dim = 32
-    h = Conv2D(transition_dim,5,padding='same',activation='tanh',name='encode_conv')(x)
+    transition_dim = 16
+    kernel_size = 5
+    stride = 2
+    h = Conv2D(transition_dim,kernel_size,strides=(stride,stride),padding='same',activation='tanh',name='encode_conv')(x)
     #h = Conv2D(transition_dim, 5, padding='same', activation='tanh', name='encode_conv')(h)
-    x_prime = Conv2D(input_shape[2], 5, padding='same', activation='tanh',name='decode_conv')(h)
+    if stride == 1:
+        x_prime = Conv2D(input_shape[2], kernel_size, padding='same', activation='tanh', name='decode_conv')(h)
+    else:
+        x_prime = Conv2DTranspose(input_shape[2], kernel_size, strides=(stride,stride), padding='same', activation='tanh', name='decode_conv')(h)
+
 
     model = Model(inputs=x, outputs=x_prime)
 
