@@ -1,20 +1,26 @@
 import cv2
 import numpy as np
+import time
 
 from keras.models import Sequential
 from keras.layers import Conv2D, Conv2DTranspose
 
 
-cv2.namedWindow("preview")
+cv2.startWindowThread()
+in_window = "input"
+cv2.namedWindow(in_window,cv2.WINDOW_KEEPRATIO)
+cv2.resizeWindow(in_window,600,600)
+
 vc = cv2.VideoCapture(0)
 
 if vc.isOpened(): # try to get the first frame
-    rval, frame = vc.read()
+    rval, im= vc.read()
 else:
     rval = False
 
 im_shape = (256,256,3)
 
+cv2.imshow(in_window,im)
 
 AE = Sequential()
 
@@ -36,16 +42,19 @@ AE.compile(optimizer='rmsprop',
               loss='mean_squared_error',
               metrics=['accuracy'])
 
-in_window = "input"
-cv2.namedWindow(in_window,cv2.WINDOW_KEEPRATIO)
-cv2.resizeWindow(in_window,600,600)
+
+
 
 def webcam_im_generator():
-    while True:
-        im = vc.read()
+    keep_fuckin_goin = True
+    while keep_fuckin_goin:
+        keep_fuckin_goin,im = vc.read()
         cv2.imshow(in_window, im)
-        im = cv2.resize(im,im_shape) - 128.0
-        yield (im,im)
+        #im = im[:,:,::-1]
+        key = cv2.waitKey(50)
+        im_out = cv2.resize(im, im_shape[0:2]) - 128.0
+
+        yield (im_out,im_out)
 
 AE.fit_generator(webcam_im_generator(),steps_per_epoch=20,epochs=1e2)
 jkl=1
