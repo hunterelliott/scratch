@@ -9,7 +9,7 @@ classdef CrossEntropyLayer
        function loss = forward(predictions,labels)
             %use logical indexing to avoid superflous log evaluations
             loss = -log(predictions(labels));
-       end       
+       end
        function dLoss_dPrediction = backward(predictions,labels)
            dLoss_dPrediction = zeros(size(predictions));
            dLoss_dPrediction(labels) = -1 ./ predictions(labels);
