@@ -2,7 +2,7 @@
 import numpy as np
 import tensorflow as tf
 import math as math
-from matplotlib import pyplot as plt
+#from matplotlib import pyplot as plt
 
 
 
@@ -32,9 +32,10 @@ def up_conv(inTens,outDepth,iLayer):
 	b = tf.get_variable('b_upConv' + str(iLayer),outDepth,initializer=tf.constant_initializer(0.0))
 	
 	#conv transpose doesn't allow unspecified dimensions so make sure these are calculated at runtime to allow variable batch and image size
-	outShape = tf.pack([tf.shape(inTens)[0],tf.shape(inTens)[1] * 2,tf.shape(inTens)[2] * 2,outDepth])
+	#outShape = tf.pack([tf.shape(inTens)[0],tf.shape(inTens)[1] * 2,tf.shape(inTens)[2] * 2,outDepth])
 
-	h = tf.nn.conv2d_transpose(inTens,W,outShape,strides=(1,2,2,1),padding='SAME',data_format='NHWC',name='upConv' + str(iLayer))  + b
+
+	h = tf.nn.conv2d_transpose(inTens,W,(tf.shape(inTens)[0],tf.shape(inTens)[1] * 2,tf.shape(inTens)[2] * 2,outDepth),strides=(1,2,2,1),padding='SAME',data_format='NHWC',name='upConv' + str(iLayer))  + b
 
 	#outTens = tf.nn.relu(h,name='out_upConv_' + str(iLayer))
 	#outTens = tf.scalar_mul(maxDisp,tf.nn.tanh(h),name='out_upConv_' + str(iLayer)) #We need to allow for negative displacements so we use tanh

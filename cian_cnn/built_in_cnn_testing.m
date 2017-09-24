@@ -20,7 +20,9 @@ fcBlocks = vertcat(fcLayers,nonlinLayers);
 
 layers = [inpuLayer, convBlocks(:)' fcBlocks(:)' {classificationLayer()}]'
 
-opts = trainingOptions('sgdm','ExecutionEnvironment','multi-gpu','MiniBatchSize',256);
+%opts = trainingOptions('sgdm','ExecutionEnvironment','multi-gpu','MiniBatchSize',256);
+opts = trainingOptions('sgdm')
+
 
 mnistPath = fullfile(matlabroot,'toolbox','nnet','nndemos',...
     'nndatasets','DigitDataset');
