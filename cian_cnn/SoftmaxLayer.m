@@ -21,7 +21,7 @@ classdef SoftmaxLayer < handle
            end
            obj.J = J;
        end
-       function grads = backwards(obj,Jnext)
+       function grads = backward(obj,Jnext)
             if isempty(obj.J)
                 obj.jacobian();            
             end

@@ -29,9 +29,13 @@ dXedPredNumeric = (lCE.forward(preds + epsilon/2,labels) - lCE.forward(preds - e
 
 lSM = SoftmaxLayer();
 
-scores = [1   5.3 20.0;
-          1.5 15  19.8;         
-          4   10  20.5]
+% scores = [1   5.3 2.00;
+%           1.5 -15  1.98;         
+%           4   10  2.05]
+%scores = randn(3,3);      
+%scores = lFC.forward(randn(4,3));
+
+      
 [nClasses,nSamples] = size(scores);
 
 probs = lSM.forward(scores)
@@ -58,11 +62,14 @@ end
 disp(JsoftmaxNumeric)
 max(abs(JsoftmaxNumeric(:) - Jsoftmax(:)))
 
-grads = squeeze(lSM.backwards(dXedPred))
+loss = lCE.forward(probs,labels);
 
+
+gradsSM = lSM.backward(lCE.backward(probs,labels))
+%%
 
 %Numerical verification of gradients
-gradNumeric = nan(nClasses,nSamples);
+gradNumericSM = nan(1,nClasses,nSamples);
 epsilon = 1e-10;
 for j = 1:nClasses
     for s = 1:nSamples
@@ -71,7 +78,68 @@ for j = 1:nClasses
         scoreDeltaF(j,s) = scoreDeltaF(j,s) + epsilon/2;
         scoreDeltaB(j,s) = scoreDeltaB(j,s) - epsilon/2;
         deltaLoss = (lCE.forward(lSM.forward(scoreDeltaF),labels) - lCE.forward(lSM.forward(scoreDeltaB),labels)) / epsilon;
-        gradNumeric(j,s) = deltaLoss(s);        
+        gradNumericSM(1,j,s) = deltaLoss(s);        
     end
 end
-gradNumeric
+gradNumericSM
+
+    
+
+max(abs(gradsSM(:)-gradNumericSM(:)))
+%% ----- Fully-connected layer tests ------ %%
+
+nClasses = 3;
+nSamples = 3;
+nNeurons = 4;
+W = randn(nClasses,nNeurons);
+b = randn(nClasses,1);
+
+a = randn(nNeurons,nSamples);
+
+%THERE"S A BUG IN HERE SOMEWHERE--- ONLY WORKS WHEN YOU TAKE gradSM from
+%CELL ABOVE!!
+lFC = InnerProductLayer(W,b);
+
+scores = lFC.forward(a);
+
+probs = lSM.forward(scores)
+loss = lCE.forward(probs,labels)
+
+gradsSM = lSM.backward(lCE.backward(probs,labels));
+%%
+
+
+gradsFC = lFC.backward(gradsSM)
+
+%Numerical verification of gradients
+gradsNumericFC = nan(1,nNeurons,nSamples);
+epsilon = 1e-11;
+for k = 1:nNeurons
+    for s = 1:nSamples
+        aDeltaF = a;
+        aDeltaB = a;
+        aDeltaF(k,s) = aDeltaF(k,s) + epsilon/2;
+        aDeltaB(k,s) = aDeltaB(k,s) - epsilon/2;
+        deltaLoss = (lCE.forward(lSM.forward(lFC.forward(aDeltaF)),labels) - lCE.forward(lSM.forward(lFC.forward(aDeltaB)),labels)) / epsilon;
+        gradsNumericFC(1,k,s) = deltaLoss(s);        
+    end    
+end
+squeeze(gradsFC)
+squeeze(gradsNumericFC)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
