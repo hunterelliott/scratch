@@ -178,6 +178,12 @@ gradsNumericb
 max(abs(gradsb(:) - gradsNumericb(:)))
 
 
+%% ---- ReLU layer ---- %%
+
+
+lRU = ReLULayer();
+
+
 
 
 

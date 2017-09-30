@@ -1,14 +1,17 @@
-classdef InnerProductLayer < handle
+classdef InnerProductLayer < CIANParameterLayer
    properties
        activations
        inputs
        W
        b
+       gradsW
+       gradsb       
    end
    methods
        function obj = InnerProductLayer(W,b)
            obj.W = W;
            obj.b = b;
+           obj.parameterFields = {'W','b'};
        end    
        function output = forward(obj,input)
             nSamples = size(input,2);
@@ -35,7 +38,8 @@ classdef InnerProductLayer < handle
                 gradsW(:,:,i) = gradNext(:,:,i)' * obj.inputs(:,i)';
                 gradsb(:,i) = gradNext(:,:,i);
            end
-           
+           obj.gradsW = gradsW;
+           obj.gradsb = gradsb;
        end                      
    end        
 end

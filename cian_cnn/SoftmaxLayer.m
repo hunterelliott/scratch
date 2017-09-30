@@ -1,4 +1,4 @@
-classdef SoftmaxLayer < handle
+classdef SoftmaxLayer < CIANLayer
    properties
        activations
        J

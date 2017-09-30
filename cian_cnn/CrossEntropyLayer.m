@@ -1,4 +1,4 @@
-classdef CrossEntropyLayer < handle
+classdef CrossEntropyLayer < CIANLayer
    properties
        activations
        labels
