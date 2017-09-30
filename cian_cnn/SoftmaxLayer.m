@@ -22,9 +22,11 @@ classdef SoftmaxLayer < handle
            obj.J = J;
        end
        function grads = backward(obj,Jnext)
-            if isempty(obj.J)
-                obj.jacobian();            
-            end
+            
+           %Update the jacobian
+            obj.jacobian();
+            
+            %Get gradients
             [nClasses,~,nSamples] = size(obj.J);
             grads = nan(1,nClasses,nSamples);
             for i = 1:nSamples

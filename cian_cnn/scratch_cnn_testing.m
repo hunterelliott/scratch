@@ -32,7 +32,7 @@ lSM = SoftmaxLayer();
 % scores = [1   5.3 2.00;
 %           1.5 -15  1.98;         
 %           4   10  2.05]
-%scores = randn(3,3);      
+scores = randn(3,3);      
 %scores = lFC.forward(randn(4,3));
 
       
@@ -59,13 +59,15 @@ for i = 1:nClasses
         end
     end
 end
-disp(JsoftmaxNumeric)
+JsoftmaxNumeric
 max(abs(JsoftmaxNumeric(:) - Jsoftmax(:)))
 
 loss = lCE.forward(probs,labels);
 
 
 gradsSM = lSM.backward(lCE.backward(probs,labels))
+gradsSM
+
 %%
 
 %Numerical verification of gradients
