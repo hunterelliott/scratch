@@ -1,18 +1,22 @@
-classdef CrossEntropyLayer
+classdef CrossEntropyLayer < handle
    properties
+       activations
+       labels
    end
    methods
-       function obj = CrossEntropyLayer()
+       function obj = CrossEntropyLayer()           
        end
    end
-   methods (Static)
-       function loss = forward(predictions,labels)
+   methods
+       function loss = forward(obj,predictions,labels)
             %use logical indexing to avoid superflous log evaluations
             loss = -log(predictions(labels));
+            obj.activations = predictions;
+            obj.labels = labels;
        end
-       function dLoss_dPrediction = backward(predictions,labels)
-           dLoss_dPrediction = zeros(size(predictions));
-           dLoss_dPrediction(labels) = -1 ./ predictions(labels);
+       function grads = backward(obj)
+           grads = zeros(size(obj.activations));
+           grads(obj.labels) = -1 ./ obj.activations(obj.labels);
        end
    end        
 end

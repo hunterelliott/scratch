@@ -1,6 +1,7 @@
 classdef InnerProductLayer < handle
    properties
        activations
+       inputs
        W
        b
    end
@@ -16,6 +17,7 @@ classdef InnerProductLayer < handle
                 output(:,j) = obj.W * input(:,j) + obj.b;
             end            
             obj.activations = output;
+            obj.inputs = input;
        end       
        function grads = backward(obj,gradNext)            
             nSamples = size(gradNext,3);
@@ -25,5 +27,15 @@ classdef InnerProductLayer < handle
             end
            
        end
+       function [gradsW,gradsb] = sideways(obj,gradNext)
+           nSamples = size(gradNext,3);
+           gradsW = nan([size(obj.W), nSamples]);
+           gradsb = nan([size(obj.b), nSamples]);
+           for i = 1:nSamples
+                gradsW(:,:,i) = gradNext(:,:,i)' * obj.inputs(:,i)';
+                gradsb(:,i) = gradNext(:,:,i);
+           end
+           
+       end                      
    end        
 end

@@ -6,8 +6,8 @@ classdef SoftmaxLayer < handle
    methods
        function obj = SoftmaxLayer()           
        end    
-       function output = forward(obj,input)
-            inputExp = exp(input);
+       function output = forward(obj,logits)
+            inputExp = exp(logits);
             output = bsxfun(@rdivide,inputExp,sum(inputExp));
             obj.activations = output;
        end       
@@ -21,7 +21,7 @@ classdef SoftmaxLayer < handle
            end
            obj.J = J;
        end
-       function grads = backward(obj,Jnext)
+       function grads = backward(obj,gradNext)
             
            %Update the jacobian
             obj.jacobian();
@@ -30,7 +30,7 @@ classdef SoftmaxLayer < handle
             [nClasses,~,nSamples] = size(obj.J);
             grads = nan(1,nClasses,nSamples);
             for i = 1:nSamples
-                grads(1,:,i) = Jnext(:,i)' * obj.J(:,:,i);
+                grads(1,:,i) = gradNext(:,i)' * obj.J(:,:,i);
             end
            
        end

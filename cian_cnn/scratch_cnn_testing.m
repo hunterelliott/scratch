@@ -10,6 +10,7 @@ labels = logical([0  0  1;
                   1  0  0]);
 [nClasses,nSamples] = size(labels);
 
+
 %First two right last one wrong
 preds = [.1 .0 .3;
          .2 .9 .3;
@@ -17,7 +18,7 @@ preds = [.1 .0 .3;
 
 %Run forward and backward passes     
 xe = lCE.forward(preds,labels)     
-dXedPred = lCE.backward(preds,labels)
+dXedPred = lCE.backward()
 
 %Verify numerically
 epsilon = 1e-8;
@@ -65,10 +66,10 @@ max(abs(JsoftmaxNumeric(:) - Jsoftmax(:)))
 loss = lCE.forward(probs,labels);
 
 
-gradsSM = lSM.backward(lCE.backward(probs,labels))
+gradsSM = lSM.backward(lCE.backward())
 gradsSM
 
-%%
+
 
 %Numerical verification of gradients
 gradNumericSM = nan(1,nClasses,nSamples);
@@ -98,8 +99,6 @@ b = randn(nClasses,1);
 
 a = randn(nNeurons,nSamples);
 
-%THERE"S A BUG IN HERE SOMEWHERE--- ONLY WORKS WHEN YOU TAKE gradSM from
-%CELL ABOVE!!
 lFC = InnerProductLayer(W,b);
 
 scores = lFC.forward(a);
@@ -107,9 +106,7 @@ scores = lFC.forward(a);
 probs = lSM.forward(scores)
 loss = lCE.forward(probs,labels)
 
-gradsSM = lSM.backward(lCE.backward(probs,labels));
-%%
-
+gradsSM = lSM.backward(lCE.backward());
 
 gradsFC = lFC.backward(gradsSM)
 
@@ -130,11 +127,55 @@ squeeze(gradsFC)
 squeeze(gradsNumericFC)
 
 
+[gradsW,gradsb] = lFC.sideways(gradsSM)
+
+%Numerical verification of W updates
+gradsNumericW = nan(nClasses,nNeurons,nSamples);
+epsilon = 1e-11;
+for j = 1:nClasses
+    for k = 1:nNeurons
+        for s = 1:nSamples
+            WDeltaF = W;
+            WDeltaB = W;
+            WDeltaF(j,k) = WDeltaF(j,k) + epsilon/2;
+            WDeltaB(j,k) = WDeltaB(j,k) - epsilon/2;
+            lFC.W = WDeltaF;
+            l1 = lCE.forward(lSM.forward(lFC.forward(a)),labels);
+            lFC.W = WDeltaB;
+            l2 = lCE.forward(lSM.forward(lFC.forward(a)),labels);
+            deltaLoss = (l1 - l2) / epsilon;
+            gradsNumericW(j,k,s) = deltaLoss(s);
+        end    
+    end
+end
+lFC.W = W;%Restore original value
+
+gradsNumericW
+
+max(abs(gradsW(:)-gradsNumericW(:)))
+%%
 
 
+%Numerical verification of bias updates
+gradsNumericb = nan(nClasses,nSamples);
+epsilon = 1e-11;
+for j = 1:nClasses    
+    for s = 1:nSamples
+        bDeltaF = b;
+        bDeltaB = b;
+        bDeltaF(j) = bDeltaF(j) + epsilon/2;
+        bDeltaB(j) = bDeltaB(j) - epsilon/2;
+        lFC.b = bDeltaF;
+        l1 = lCE.forward(lSM.forward(lFC.forward(a)),labels);
+        lFC.b = bDeltaB;
+        l2 = lCE.forward(lSM.forward(lFC.forward(a)),labels);
+        deltaLoss = (l1 - l2) / epsilon;
+        gradsNumericb(j,s) = deltaLoss(s);        
+    end
+end
+gradsNumericb
 
-
-
+max(abs(gradsb(:) - gradsNumericb(:)))
 
 
 
