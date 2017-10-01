@@ -1,6 +1,6 @@
 classdef (Abstract) CIANLayer < handle
    properties (Abstract)
-       activations       
+       activations
    end   
    methods (Abstract)
         output = forward(obj,input)

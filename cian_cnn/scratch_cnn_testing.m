@@ -185,6 +185,26 @@ lRU = ReLULayer();
 
 
 
+%% ---- Conv layer --- %%
+
+
+lC = ConvolutionalLayer(randn(3,3,3,5),ones(5,1));
+
+im = imread('peppers.png');
+
+out = lC.forward(im);
+
+
+grads = lC.backward(randn(size(out)));
+
+[gradW,gradb] = lC.sideways(randn(size(out)));
+
+%% ---  pooling --- %%
+
+lMP = AveragePoolingLayer(3);
+
+out = lMP.forward(double(im)+randn(size(im)));
+
 
 
 
