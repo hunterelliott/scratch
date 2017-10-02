@@ -1,10 +1,15 @@
-function [predictions,losses] = cianForward(layers,input,labels)
+function activations = cianForward(layers,input,labels)
 
 nLayers = numel(layers);
 
-activations = input;
-for i = 1:(nLayers-1)
-    activations = layers{i}.forward(activations);
+activations = cell(nLayers+1,1);
+activations{1} = input;
+
+for i = 1:nLayers
+    if isa(layers{i},'CrossEntropyLayer')        
+        layerInputs = {activations{i}, labels};
+    else
+        layerInputs = activations(i);
+    end
+    activations{i+1} = layers{i}.forward(layerInputs{:});
 end
-predictions = activations;
-losses = layers{end}.forward(predictions,labels);

@@ -1,6 +1,5 @@
 classdef ConvolutionalLayer < CIANParameterLayer
-   properties
-       activations
+   properties       
        inputs
        W
        b
@@ -30,8 +29,7 @@ classdef ConvolutionalLayer < CIANParameterLayer
                 for k = 1:nKernels                    
                     output(:,:,k,i) = convn(paddedInput(:,:,:,i),obj.W(:,:,:,k),'valid') + obj.b(k);                    
                 end
-            end            
-            obj.activations = output;
+            end                        
             obj.inputs = input;
        end       
        function grads = backward(obj,gradNext)            
@@ -62,7 +60,7 @@ classdef ConvolutionalLayer < CIANParameterLayer
             for i = 1:nSamples
                 for k = 1:nKernels
                     for j = 1:inDims                    
-                        gradsW(:,:,j,k) = rot90(conv2(paddedInput(:,:,j,i),rot90(gradNext(:,:,k,i),2),'valid'),2);                        
+                        gradsW(:,:,j,k,i) = rot90(conv2(paddedInput(:,:,j,i),rot90(gradNext(:,:,k,i),2),'valid'),2);                        
                     end
                     gradsb(k,i) = sum(sum(gradNext(:,:,k,i)));
                 end

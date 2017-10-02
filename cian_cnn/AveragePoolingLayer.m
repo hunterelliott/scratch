@@ -1,6 +1,5 @@
 classdef AveragePoolingLayer < CIANLayer    
-   properties
-       activations
+   properties       
        poolSize
        input
    end
@@ -20,11 +19,8 @@ classdef AveragePoolingLayer < CIANLayer
            end  
            %Keep track of which values were used for backprop           
            border = (obj.poolSize-1)/2;
-           output = output(border+1:obj.poolSize:end,border+1:obj.poolSize:end,:,:);
-           obj.activations = output;
-           obj.input = input;
-           
-            
+           output = output(border+1:obj.poolSize:end,border+1:obj.poolSize:end,:,:);           
+           obj.input = input;                       
        end       
        function grads = backward(obj,gradNext)    
             inDims = size(obj.input,3);
@@ -34,9 +30,7 @@ classdef AveragePoolingLayer < CIANLayer
                 for j = 1:inDims
                     grads(:,:,j,i) = imresize(gradNext(:,:,j,i),size(obj.input(:,:,j,i)),'nearest');
                 end
-            end
-            grads = gradNext;
-            grads(obj.activations==0) = 0;
+            end            
        end       
    end        
 end

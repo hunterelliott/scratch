@@ -1,6 +1,5 @@
 classdef InnerProductLayer < CIANParameterLayer
-   properties
-       activations
+   properties       
        inputs
        W
        b
@@ -18,8 +17,7 @@ classdef InnerProductLayer < CIANParameterLayer
             output = zeros(size(obj.W,1),nSamples);
             for j = 1:nSamples
                 output(:,j) = obj.W * input(:,j) + obj.b;
-            end            
-            obj.activations = output;
+            end                        
             obj.inputs = input;
        end       
        function grads = backward(obj,gradNext)            

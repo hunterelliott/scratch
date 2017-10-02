@@ -1,6 +1,11 @@
-%% --- Define dataset --- %%
+%% --- parameters ---- %%
 
 datasetName = 'MNIST'
+networkType = 'CNN'
+
+%% --- Define dataset --- %%
+
+
 
 switch datasetName
 
@@ -39,42 +44,98 @@ switch datasetName
         labels = false(nClasses,nSamples);
         labels(sub2ind(size(labels),labelInd',1:nSamples)) = true;
         input = mnistData.readall;
-        input = cellfun(@(x)(x(:)),input,'Unif',0);
         
-        input = double([input{:}]);
+        switch networkType
+            case 'MLP'
+                input = cellfun(@(x)(x(:)),input,'Unif',0);                
+                input = single([input{:}]);
+                inputDims = size(input,1);
+                
+                layerDims = round([inputDims ./ 2 .^ (0:3), nClasses]);
+                
+            case 'CNN'
+                input = single(cat(4,input{:}));
+                inputDims = size(input,3);
+                layerDims = [inputDims, round( 8 .* 2 .^ (0:2))];
+                fcLayerDims = [layerDims(end) ./ 2 .^(0:1), nClasses];
+                inShape = size(input);
+        end
+        
         input = input - 128;
         input = input / 128;
+                
         
-        inputDims = size(input,1);
         
-        layerDims = round([inputDims ./ 2 .^ (0:3), nClasses]);
         
         
 end
     
 %% --- Define network --- %%
 
+
+
 %Create simple MLP
 
 biasInit = 0.1;
 wVarInit = 0.01;
+k = 3; %Kernel width
 
 nLayers = numel(layerDims);
 layers = {};
+poolSize = 3;
 
-for iLayer = 1:nLayers-1
 
-    layers = [layers {InnerProductLayer(randn(layerDims(iLayer+1),layerDims(iLayer))*wVarInit,biasInit*ones(layerDims(iLayer+1),1))}];
-    
-    if iLayer < nLayers-1
-        layers = [layers {ReLULayer()}];
-    end
+
+switch networkType
+    case 'MLP'            
+        for iLayer = 1:nLayers-1            
+            layers = [layers {InnerProductLayer(randn(layerDims(iLayer+1),layerDims(iLayer))*wVarInit,biasInit*ones(layerDims(iLayer+1),1))}];
+            if iLayer < nLayers-1
+                layers = [layers {ReLULayer()}];
+            end
+        end
+        
+    case 'CNN'
+        
+        nFCLayers = numel(fcLayerDims);
+        for iLayer = 1:nLayers-1
+            layers = [layers {ConvolutionalLayer(randn(k,k,layerDims(iLayer),layerDims(iLayer+1))*wVarInit,biasInit*ones(layerDims(iLayer+1),1))}];            
+            layers = [layers {ReLULayer()}];
+            layers = [layers {AveragePoolingLayer(poolSize)}];            
+        end
+        layers = [layers {FlattenLayer()}];
+        
+        %Run a forward pass as a hacky way to get FC starting dimension
+        tmp = cianForward(layers,input(:,:,:,1:2),labels(:,1:2));
+        fcLayerDims = [size(tmp{end},1), fcLayerDims]
+        for iLayer = 1:nFCLayers
+            layers = [layers {InnerProductLayer(randn(fcLayerDims(iLayer+1),fcLayerDims(iLayer))*wVarInit,biasInit*ones(fcLayerDims(iLayer+1),1))}];
+            if iLayer < nFCLayers
+                layers = [layers {ReLULayer()}];
+            end
+            
+        end
+        
 end
 
 layers = [layers {SoftmaxLayer()}];
 
 layers = [layers {CrossEntropyLayer()}];
 
+%% -- Test gradients --- %%
+
+testInd = randsample(nSamples,2);
+
+switch networkType 
+    case'CNN'        
+        
+        testInput = input(:,:,:,testInd);
+    case 'MLP'
+        testInput = input(:,testInd);
+end
+    testLabels = labels(:,testInd);
+    
+cianVerifyGradients(layers,testInput,testLabels)
 
 
 
@@ -82,7 +143,7 @@ layers = [layers {CrossEntropyLayer()}];
 
 nIters = 1e3;
 learningRate = 1e-2;
-batchSize = 64;
+batchSize = 128;
 
 lossPerIter = nan(nIters,1);
 accPerIter = nan(nIters,1);
@@ -95,12 +156,20 @@ for i = 1:nIters
     %Get the batch
     currIndInd = mod((i-1)*batchSize+1:i*batchSize,nSamples)+1;
     currInd = sampleInds(currIndInd);
-    currInput = input(:,currInd);
+    switch networkType
+        case 'MLP'
+            currInput = input(:,currInd);
+        case 'CNN'
+            currInput = input(:,:,:,currInd);
+    end
+    
     currLabels = labels(:,currInd);
     currLabelInd = labelInd(currInd);   
     
     %Make the forward and backward passes and the update
-    [preds,losses] = cianForward(layers,currInput,currLabels);
+    activations = cianForward(layers,currInput,currLabels);
+    preds = activations{end-1};
+    losses = activations{end};
     gradInput = cianBackward(layers);
     cianUpdate(layers,learningRate)
     
@@ -114,6 +183,8 @@ for i = 1:nIters
         disp(['Iteration ' num2str(i) ', loss = ' num2str(lossPerIter(i)) ', accuracy = ' num2str(accPerIter(i))])
     end
 end
+
+%%
 
 cf = figure;
 subplot(2,1,1)
