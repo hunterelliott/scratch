@@ -2,6 +2,7 @@
 
 datasetName = 'MNIST'
 networkType = 'CNN'
+doVerify = false;
 
 %% --- Define dataset --- %%
 
@@ -124,20 +125,21 @@ layers = [layers {CrossEntropyLayer()}];
 
 %% -- Test gradients --- %%
 
-testInd = randsample(nSamples,2);
+if doVerify
+    testInd = randsample(nSamples,2);
 
-switch networkType 
-    case'CNN'        
-        
-        testInput = input(:,:,:,testInd);
-    case 'MLP'
-        testInput = input(:,testInd);
+    switch networkType 
+        case'CNN'        
+
+            testInput = input(:,:,:,testInd);
+        case 'MLP'
+            testInput = input(:,testInd);
+    end
+        testLabels = labels(:,testInd);
+
+    cianVerifyGradients(layers,testInput,testLabels)
+
 end
-    testLabels = labels(:,testInd);
-    
-cianVerifyGradients(layers,testInput,testLabels)
-
-
 
 %% --- Train it ---- %%0
 
