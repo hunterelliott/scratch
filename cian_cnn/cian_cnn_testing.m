@@ -58,7 +58,8 @@ switch datasetName
                 input = single(cat(4,input{:}));
                 inputDims = size(input,3);
                 layerDims = [inputDims, round( 8 .* 2 .^ (0:2))];
-                fcLayerDims = [layerDims(end) ./ 2 .^(0:2), nClasses];
+                %fcLayerDims = [layerDims(end) ./ 2 .^(0:2), nClasses];
+                fcLayerDims = [1024 ./ 2 .^(0:2), nClasses];
                 inShape = size(input);
         end
         
@@ -75,8 +76,6 @@ end
 
 
 
-%Create simple MLP
-
 biasInit = 0.1;
 wVarInit = 0.01;
 k = 3; %Kernel width
@@ -89,6 +88,7 @@ poolSize = 3;
 
 switch networkType
     case 'MLP'            
+        
         for iLayer = 1:nLayers-1            
             layers = [layers {InnerProductLayer(randn(layerDims(iLayer+1),layerDims(iLayer))*wVarInit,biasInit*ones(layerDims(iLayer+1),1))}];
             if iLayer < nLayers-1
@@ -143,8 +143,8 @@ end
 
 %% --- Train it ---- %%0
 
-nIters = 4e4;
-learningRate = 1e-2;
+nIters = 1e5;
+learningRate = 1e-3;
 batchSize = 128;
 
 lossPerIter = nan(nIters,1);

@@ -41,7 +41,7 @@ classdef ConvolutionalLayer < CIANParameterLayer
             for i = 1:nSamples
                 for j = 1:inDims
                     for k = 1:nKernels
-                        grads(:,:,j) = grads(:,:,j) + conv2(gradNext(:,:,k),rot90(obj.W(:,:,j,k),2),'same');
+                        grads(:,:,j,i) = grads(:,:,j,i) + conv2(gradNext(:,:,k,i),rot90(obj.W(:,:,j,k),2),'same');
                     end
                 end
             end

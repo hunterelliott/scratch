@@ -14,7 +14,7 @@ addpath('/home/hunter/extern-repos/bfmatlab')
 %% ---- Process H&E data ----- %%
 
 wsiFile = '/media/hunter/1E52113152110F61/shared/Data/cycIF/H&E/training Batch3.vsi';
-outputDir = '/media/hunter/1E52113152110F61/shared/Data/cycIF/Processed/H&E';
+outputDir = '/media/hunter/1E52113152110F61/shared/Data/cycIF/Processed/HandE';
 
 iPlane = 11;%Full res 20x stitched WSI plane
 
@@ -25,12 +25,16 @@ bfr.setSeries(iPlane)
 wsiSize(1) = bfr.getSizeX();
 wsiSize(2) = bfr.getSizeY();
 
-xSplits = 1:imSize(1):wsiSize(1)-1;
-ySplits = 1:imSize(2):wsiSize(2)-1;
+stride = round(imSize * .75);
+
+xSplits = 1:stride(1):wsiSize(1)-stride(1);
+ySplits = 1:stride(2):wsiSize(2)-stride(1);
 
 nPatchesWSI = (numel(xSplits)-1)*(numel(ySplits)-1);
 
 patch = zeros([imSize, nChan],'uint8');
+
+%%
 
 for ix = 1:numel(xSplits)-1
     for iy = 1:numel(ySplits)-1

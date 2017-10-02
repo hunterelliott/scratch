@@ -1,15 +1,17 @@
-function [maxErrorPerLayer,maxErrorRatioPerLayer] = cianVerifyGradients(layers,input,labels)
+function [maxErrorPerLayer,maxErrorRatioPerLayer,maxErrorPerLayerParam,maxErrorRatioPerLayerParam] = cianVerifyGradients(layers,input,labels)
 
-epsilon = 1e-8;
+epsilon = 1e-5;
 nLayers = numel(layers);
 activations = cianForward(layers,input,labels);
 grads = cianBackward(layers);
 
 gradsNumeric = cell(nLayers,1);
 gradsNumericParams = cell(nLayers,1);
-
+q
 maxErrorPerLayer = nan(nLayers,1);
 maxErrorRatioPerLayer = nan(nLayers,1);
+maxErrorPerLayerParam =  nan(nLayers,1);
+maxErrorRatioPerLayerParam =  nan(nLayers,1);
 
 for iLayer = 1:nLayers        
     
@@ -33,8 +35,8 @@ for iLayer = 1:nLayers
         end
         
     end
-    [maxErrorPerLayer(iLayer),iMax] = max(abs(gradsNumeric{iLayer}(:) - grads{iLayer}(:)));
-    maxErrorRatioPerLayer(iLayer) = maxErrorPerLayer(iLayer) / abs(gradsNumeric{iLayer}(iMax));
+    maxErrorPerLayer(iLayer) = max(abs(gradsNumeric{iLayer}(:) - grads{iLayer}(:)));
+    maxErrorRatioPerLayer(iLayer) = maxErrorPerLayer(iLayer) / mean(abs(gradsNumeric{iLayer}(:)));
     disp(['Maximum gradient error on layer ' num2str(iLayer) ' = ' num2str(maxErrorPerLayer(iLayer))])
     disp(['Maximum gradient error ratio on layer ' num2str(iLayer) ' = ' num2str(maxErrorRatioPerLayer(iLayer))])
     
@@ -68,8 +70,13 @@ for iLayer = 1:nLayers
                 gradsNumericParams{iLayer}{j}(i,:) = deltaLoss;                
                 
             end
+            
+            gradsNumericParams{iLayer}{j} = reshape(gradsNumericParams{iLayer}{j},size(gradPerSample));
+            
             maxErrorPerLayerParam(iLayer) = max(abs(gradsNumericParams{iLayer}{j}(:) - gradPerSample(:)));
-            disp(['Maximum parameter gradient error on layer ' num2str(iLayer) ' = ' num2str(maxErrorPerLayerParam(iLayer))])                        
+            maxErrorRatioPerLayerParam(iLayer) = maxErrorPerLayerParam(iLayer) / mean(abs(gradsNumericParams{iLayer}{j}(:)));
+            disp(['Maximum parameter gradient error on layer ' num2str(iLayer) ' = ' num2str(maxErrorPerLayerParam(iLayer))])        
+            disp(['Maximum parameter gradient error ratio on layer ' num2str(iLayer) ' = ' num2str(maxErrorRatioPerLayerParam(iLayer))])
         end
         
         
