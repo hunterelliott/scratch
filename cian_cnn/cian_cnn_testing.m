@@ -58,7 +58,7 @@ switch datasetName
                 input = single(cat(4,input{:}));
                 inputDims = size(input,3);
                 layerDims = [inputDims, round( 8 .* 2 .^ (0:2))];
-                fcLayerDims = [layerDims(end) ./ 2 .^(0:1), nClasses];
+                fcLayerDims = [layerDims(end) ./ 2 .^(0:2), nClasses];
                 inShape = size(input);
         end
         
@@ -143,7 +143,7 @@ end
 
 %% --- Train it ---- %%0
 
-nIters = 1e3;
+nIters = 4e4;
 learningRate = 1e-2;
 batchSize = 128;
 
