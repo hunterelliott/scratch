@@ -7,7 +7,7 @@ grads = cianBackward(layers);
 
 gradsNumeric = cell(nLayers,1);
 gradsNumericParams = cell(nLayers,1);
-q
+
 maxErrorPerLayer = nan(nLayers,1);
 maxErrorRatioPerLayer = nan(nLayers,1);
 maxErrorPerLayerParam =  nan(nLayers,1);
