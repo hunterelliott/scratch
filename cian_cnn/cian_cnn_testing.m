@@ -57,7 +57,7 @@ switch datasetName
             case 'CNN'
                 input = single(cat(4,input{:}));
                 inputDims = size(input,3);
-                layerDims = [inputDims, round( 8 .* 2 .^ (0:1))];
+                layerDims = [inputDims, round( 8 .* 2 .^ (0:2))];
                 %fcLayerDims = [layerDims(end) ./ 2 .^(0:2), nClasses];
                 fcLayerDims = [1024 ./ 2 .^(0:1), nClasses];
                 inShape = size(input);
