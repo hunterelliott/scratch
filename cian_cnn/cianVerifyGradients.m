@@ -37,8 +37,8 @@ for iLayer = 1:nLayers
     end
     maxErrorPerLayer(iLayer) = max(abs(gradsNumeric{iLayer}(:) - grads{iLayer}(:)));
     maxErrorRatioPerLayer(iLayer) = maxErrorPerLayer(iLayer) / mean(abs(gradsNumeric{iLayer}(:)));
-    disp(['Maximum gradient error on layer ' num2str(iLayer) ' = ' num2str(maxErrorPerLayer(iLayer))])
-    disp(['Maximum gradient error ratio on layer ' num2str(iLayer) ' = ' num2str(maxErrorRatioPerLayer(iLayer))])
+    disp(['Maximum gradient error on ' class(layers{iLayer}) ', layer #'  num2str(iLayer) ' = ' num2str(maxErrorPerLayer(iLayer))])
+    disp(['Maximum gradient error ratio on ' class(layers{iLayer}) ', layer #' num2str(iLayer) ' = ' num2str(maxErrorRatioPerLayer(iLayer))])
     
     %FINISH THIS!!
     if isa(layers{iLayer},'CIANParameterLayer')
@@ -75,8 +75,8 @@ for iLayer = 1:nLayers
             
             maxErrorPerLayerParam(iLayer) = max(abs(gradsNumericParams{iLayer}{j}(:) - gradPerSample(:)));
             maxErrorRatioPerLayerParam(iLayer) = maxErrorPerLayerParam(iLayer) / mean(abs(gradsNumericParams{iLayer}{j}(:)));
-            disp(['Maximum parameter gradient error on layer ' num2str(iLayer) ' = ' num2str(maxErrorPerLayerParam(iLayer))])        
-            disp(['Maximum parameter gradient error ratio on layer ' num2str(iLayer) ' = ' num2str(maxErrorRatioPerLayerParam(iLayer))])
+            disp(['Maximum parameter gradient error on ' class(layers{iLayer}) ', layer #'  num2str(iLayer) ' = ' num2str(maxErrorPerLayerParam(iLayer))])        
+            disp(['Maximum parameter gradient error ratio on ' class(layers{iLayer}) ', layer #'  num2str(iLayer) ' = ' num2str(maxErrorRatioPerLayerParam(iLayer))])
         end
         
         

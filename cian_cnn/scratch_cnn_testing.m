@@ -199,7 +199,7 @@ grads = lC.backward(randn(size(out)));
 
 [gradW,gradb] = lC.sideways(randn(size(out)));
 
-%% ---  pooling --- %%
+%% ---  pooling setup --- %%
 
 % lMP = AveragePoolingLayer(3);
 % 
@@ -211,6 +211,11 @@ im = imread('peppers.png');
 im = im(:,:,1);
 ps = 3;
 
+%Pad to multiple of poolSize
+im = padarray(im,ceil(size(im)/3)*3 - size(im),-Inf,'post');
+imSize = size(im);
+pooledSize = ceil(imSize(1:2) ./ ps);
+
 
 
 %[ogSubX, ogSubY] =  meshgrid(1:imSize(2),1:imSize(1));
@@ -219,9 +224,8 @@ ps = 3;
 %nhX=mod(ogSubX-1,ps)+1;
 %nhY=mod(ogSubY-1,ps)+1;
 
-im = padarray(im,ceil(size(im)/3)*3 - size(im),-Inf,'post');
-imSize = size(im);
-pooledSize = ceil(imSize(1:2) ./ ps);
+
+%Simpler way fully vectorized? might take students a while...
 
 [nhX, nhY] =  mod(meshgrid(1:imSize(2),1:imSize(1)),ps)+1;
 [pSubX, pSubY] =  meshgrid(1:pooledSize(2),1:pooledSize(1));
@@ -237,7 +241,19 @@ nHoodMatInd = sub2ind([ps*ps, prod(pooledSize)],sub2ind([ps,ps],nhY(:),nhX(:)),p
 poolMat = zeros(ps*ps,numel(im)/ps*ps);
 poolMat(nHoodMatInd) = im;
 
+
+
+%% ---  max pooling --- %%
+
+
 [maxVal,iMax] = max(poolMat,[],1);
 
 pooledIm = reshape(maxVal(poolInd),pooledSize);
+
+%% ---  average pooling --- %%
+
+
+%Simpler way? might take students a while...
+
+
 

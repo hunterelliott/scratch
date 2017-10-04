@@ -1,34 +1,37 @@
 classdef AveragePoolingLayer < CIANLayer    
    properties       
        poolSize
-       input
+       inputSize
+       padWidth
    end
    methods
        function obj = AveragePoolingLayer(poolSize)
            obj.poolSize = poolSize;
-           assert(mod(poolSize,2)==1);%Don't want to deal with padding on even size pools
+           %assert(mod(poolSize,2)==1);%Don't want to deal with padding on even size pools
        end    
        function output = forward(obj,input)
            inDims = size(input,3);
            nSamples = size(input,4);
-           output = zeros(size(input));
+           pw = ceil((obj.poolSize-1)/2);
+           output = zeros(size(input) - [2*pw 2*pw 0 nSamples]);           
            for i = 1:nSamples
                for j = 1:inDims
-                    output(:,:,j,i) = conv2(input(:,:,j,i),ones(obj.poolSize),'same');
+                    output(:,:,j,i) = conv2(input(:,:,j,i),ones(obj.poolSize),'valid');
                end
-           end  
-           %Keep track of which values were used for backprop           
-           border = (obj.poolSize-1)/2;
-           output = output(border+1:obj.poolSize:end,border+1:obj.poolSize:end,:,:);           
-           obj.input = input;                       
+           end    
+           output = output(1:obj.poolSize:end,1:obj.poolSize:end,:,:);%This will discard remainder neighborhoods from right and bottom...           
+           obj.inputSize = size(input);      
+           obj.padWidth = pw;
        end       
        function grads = backward(obj,gradNext)    
-            inDims = size(obj.input,3);
-            nSamples = size(obj.input,4);
-            grads = nan(size(obj.input));
+            inDims = size(gradNext,3);
+            nSamples = size(gradNext,4);
+            grads = nan(obj.inputSize);
             for i = 1:nSamples
                 for j = 1:inDims
-                    grads(:,:,j,i) = imresize(gradNext(:,:,j,i),size(obj.input(:,:,j,i)),'nearest');
+                    %Pad only on right and bottom to match sub-sampling
+                    %above
+                    grads(:,:,j,i) = padarray(kron(gradNext(:,:,j,i),ones(obj.poolSize)),2*[obj.padWidth,obj.padWidth],'post');
                 end
             end            
        end       
