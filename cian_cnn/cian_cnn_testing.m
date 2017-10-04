@@ -59,7 +59,7 @@ switch datasetName
                 inputDims = size(input,3);
                 layerDims = [inputDims, round( 8 .* 2 .^ (0:2))];
                 %fcLayerDims = [layerDims(end) ./ 2 .^(0:2), nClasses];
-                fcLayerDims = [1024 ./ 2 .^(0:2), nClasses];
+                fcLayerDims = [1024 ./ 2 .^(0:1), nClasses];
                 inShape = size(input);
         end
         
@@ -104,7 +104,9 @@ switch networkType
         for iLayer = 1:nLayers-1
             layers = [layers {ConvolutionalLayer(randn(k,k,layerDims(iLayer),layerDims(iLayer+1))*wVarInit,biasInit*ones(layerDims(iLayer+1),1))}];            
             layers = [layers {ReLULayer()}];
-            layers = [layers {AveragePoolingLayer(poolSize)}];            
+            if iLayer < 2
+                layers = [layers {AveragePoolingLayer(poolSize)}];            
+            end
         end
         layers = [layers {FlattenLayer()}];
         

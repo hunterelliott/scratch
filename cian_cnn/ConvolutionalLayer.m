@@ -20,14 +20,19 @@ classdef ConvolutionalLayer < CIANParameterLayer
             nSamples = size(input,4);
             nKernels = size(obj.W,4);
             outputWH = [size(input,1),size(input,2)];
-            output = zeros([outputWH, nKernels, nSamples]);
-            
             padW = (size(obj.W,1)-1)/2;
-            paddedInput = padarray(input,[padW,padW,0,0],'symmetric');
+            %output = zeros([outputWH, nKernels, nSamples]);
+            output = zeros([outputWH-padW*2, nKernels, nSamples]);
+            %paddedInput = padarray(input,[padW,padW,0,0],'symmetric');
+            paddedInput = input;
             
             for i = 1:nSamples
-                for k = 1:nKernels                    
-                    output(:,:,k,i) = convn(paddedInput(:,:,:,i),obj.W(:,:,:,k),'valid') + obj.b(k);                    
+                for k = 1:nKernels
+                    %We use n-d convolution as a shortcut, but need to
+                    %pre-flip the kernel along the 3rd dimension so it is
+                    %actually just a sum along the 2D kernel element
+                    %convolutions
+                    output(:,:,k,i) = convn(paddedInput(:,:,:,i),flip(obj.W(:,:,:,k),3),'valid') + obj.b(k);                    
                 end
             end                        
             obj.inputs = input;
@@ -41,7 +46,8 @@ classdef ConvolutionalLayer < CIANParameterLayer
             for i = 1:nSamples
                 for j = 1:inDims
                     for k = 1:nKernels
-                        grads(:,:,j,i) = grads(:,:,j,i) + conv2(gradNext(:,:,k,i),rot90(obj.W(:,:,j,k),2),'same');
+                        %grads(:,:,j,i) = grads(:,:,j,i) + conv2(gradNext(:,:,k,i),rot90(obj.W(:,:,j,k),2),'same');
+                        grads(:,:,j,i) = grads(:,:,j,i) + conv2(gradNext(:,:,k,i),rot90(obj.W(:,:,j,k),2),'full');
                     end
                 end
             end
@@ -55,7 +61,8 @@ classdef ConvolutionalLayer < CIANParameterLayer
             nKernels = size(obj.W,4);
             
             padW = (size(obj.W,1)-1)/2;
-            paddedInput = padarray(obj.inputs,[padW,padW,0,0],'symmetric');
+            %paddedInput = padarray(obj.inputs,[padW,padW,0,0],'symmetric');
+            paddedInput = obj.inputs;
             
             for i = 1:nSamples
                 for k = 1:nKernels
