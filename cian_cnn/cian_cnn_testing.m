@@ -2,7 +2,8 @@
 
 datasetName = 'MNIST'
 networkType = 'CNN'
-doVerify = false;
+doVerify = true;
+doSubSample = true;
 
 %% --- Define dataset --- %%
 
@@ -46,6 +47,23 @@ switch datasetName
         labels(sub2ind(size(labels),labelInd',1:nSamples)) = true;
         input = mnistData.readall;
         
+        if doSubSample
+            %labelSubset = [1,8]
+
+            %For quick tests, take sub-set of data
+            indSubSample = randsample(nSamples,64);
+            nSamples = numel(indSubSample);            
+            input = input(indSubSample);
+            labels = labels(:,indSubSample);
+            classPresent = sum(labels,2)>0;
+            labels = labels(classPresent,:);
+            [~,labelInd] = max(labels,[],1);
+            nClasses = size(labels,1);
+            
+            
+        end
+        
+        
         switch networkType
             case 'MLP'
                 input = cellfun(@(x)(x(:)),input,'Unif',0);                
@@ -57,18 +75,16 @@ switch datasetName
             case 'CNN'
                 input = single(cat(4,input{:}));
                 inputDims = size(input,3);
-                layerDims = [inputDims, round( 8 .* 2 .^ (0:1))];
+                layerDims = [inputDims, round( 8 .* 2 .^ (0:0))];
                 %fcLayerDims = [layerDims(end) ./ 2 .^(0:2), nClasses];
                 %fcLayerDims = [1024 ./ 2 .^(0:1), nClasses];
-                fcLayerDims = [256 ./ 2 .^(0:1), nClasses];                
+                %fcLayerDims = [128 ./ 2 .^(0:0), nClasses];                
+                fcLayerDims = [32 ./ 2 .^(0:0), nClasses];                
                 inShape = size(input);
         end
         
         input = input - 128;
-        input = input / 128;
-        
-        labelSubset = [1,8]
-                
+        input = input / 128;                                
         
         
         
@@ -148,15 +164,17 @@ end
 
 %% --- Train it ---- %%0
 
-nIters = 1e5;
-learningRate = 1e-3;
-batchSize = 128;
+nIters = 1e3;
+learningRate = 1e-2;
+batchSize = 2;
 
 lossPerIter = nan(nIters,1);
 accPerIter = nan(nIters,1);
 
 %Randomize sample order
 sampleInds = randperm(nSamples);
+
+%BUG?? what is going on when not all classes represented???
 
 for i = 1:nIters
     
