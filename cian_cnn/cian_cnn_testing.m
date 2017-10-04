@@ -2,8 +2,8 @@
 
 datasetName = 'MNIST'
 networkType = 'CNN'
-doVerify = true;
-doSubSample = true;
+doVerify = false;
+doSubSample = false;
 
 %% --- Define dataset --- %%
 
@@ -165,8 +165,8 @@ end
 %% --- Train it ---- %%0
 
 nIters = 1e3;
-learningRate = 1e-2;
-batchSize = 2;
+learningRate = 1e-3;
+batchSize = 16;
 
 lossPerIter = nan(nIters,1);
 accPerIter = nan(nIters,1);
