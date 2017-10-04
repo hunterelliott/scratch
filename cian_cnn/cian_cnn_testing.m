@@ -65,6 +65,8 @@ switch datasetName
         
         input = input - 128;
         input = input / 128;
+        
+        labelSubset = [1,8]
                 
         
         

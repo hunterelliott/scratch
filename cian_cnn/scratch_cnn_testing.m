@@ -201,14 +201,43 @@ grads = lC.backward(randn(size(out)));
 
 %% ---  pooling --- %%
 
-lMP = AveragePoolingLayer(3);
+% lMP = AveragePoolingLayer(3);
+% 
+% out = lMP.forward(double(im)+randn(size(im)));
 
-out = lMP.forward(double(im)+randn(size(im)));
+im = imread('peppers.png');
+
+%TEMP FOR ONE CHAN !!
+im = im(:,:,1);
+ps = 3;
 
 
 
+%[ogSubX, ogSubY] =  meshgrid(1:imSize(2),1:imSize(1));
+
+%X and Y position within the pooling neighborhood
+%nhX=mod(ogSubX-1,ps)+1;
+%nhY=mod(ogSubY-1,ps)+1;
+
+im = padarray(im,ceil(size(im)/3)*3 - size(im),-Inf,'post');
+imSize = size(im);
+pooledSize = ceil(imSize(1:2) ./ ps);
+
+[nhX, nhY] =  mod(meshgrid(1:imSize(2),1:imSize(1)),ps)+1;
+[pSubX, pSubY] =  meshgrid(1:pooledSize(2),1:pooledSize(1));
+pooledSubY = kron(pSubY,ones(ps));
+pooledSubX = kron(pSubX,ones(ps));
+
+poolAxisInd = sub2ind(pooledSize,pooledSubY,pooledSubX);
+poolInd = sub2ind(pooledSize,pSubY,pSubX);
+%Indices within the matrix of neighborhoods which is [ps*ps,NaN] in size0;
+nHoodMatInd = sub2ind([ps*ps, prod(pooledSize)],sub2ind([ps,ps],nhY(:),nhX(:)),poolAxisInd(:));
 
 
+poolMat = zeros(ps*ps,numel(im)/ps*ps);
+poolMat(nHoodMatInd) = im;
 
+[maxVal,iMax] = max(poolMat,[],1);
 
+pooledIm = reshape(maxVal(poolInd),pooledSize);
 
