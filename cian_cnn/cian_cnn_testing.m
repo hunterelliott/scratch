@@ -2,7 +2,7 @@
 
 datasetName = 'MNIST'
 networkType = 'CNN'
-doVerify = false;
+doVerify = true;
 doSubSample = false;
 
 %% --- Define dataset --- %%
@@ -75,7 +75,7 @@ switch datasetName
             case 'CNN'
                 input = single(cat(4,input{:}));
                 inputDims = size(input,3);
-                layerDims = [inputDims, round( 8 .* 2 .^ (0:0))];
+                layerDims = [inputDims, round( 8 .* 2 .^ (0:1))];
                 %fcLayerDims = [layerDims(end) ./ 2 .^(0:2), nClasses];
                 %fcLayerDims = [1024 ./ 2 .^(0:1), nClasses];
                 %fcLayerDims = [128 ./ 2 .^(0:0), nClasses];                
@@ -164,9 +164,11 @@ end
 
 %% --- Train it ---- %%0
 
-nIters = 1e3;
-learningRate = 1e-3;
+nIters = 5e3;
+learningRate = 1e-2;
+momentum = 0.9;
 batchSize = 16;
+
 
 lossPerIter = nan(nIters,1);
 accPerIter = nan(nIters,1);
@@ -175,6 +177,7 @@ accPerIter = nan(nIters,1);
 sampleInds = randperm(nSamples);
 
 %BUG?? what is going on when not all classes represented???
+updates = {};
 
 for i = 1:nIters
     
@@ -196,7 +199,7 @@ for i = 1:nIters
     preds = activations{end-1};
     losses = activations{end};
     gradInput = cianBackward(layers);
-    cianUpdate(layers,learningRate)
+    updates = cianUpdate(layers,learningRate,momentum,updates);
     
     %Log performance
     lossPerIter(i) = mean(losses);    
