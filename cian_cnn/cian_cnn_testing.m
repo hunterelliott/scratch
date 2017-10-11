@@ -7,8 +7,8 @@ doSubSample = false;
 resizeTo = 64;
 %resizeTo = [];
 
-imageParentDir = '/media/hunter/Windows/shared/Data/DeadNet/Feb_12_EasySubset/TrainSet/preProc'
-%imageParentDir = fullfile(matlabroot,'toolbox','nnet','nndemos','nndatasets','DigitDataset');
+%imageParentDir = '/media/hunter/Windows/shared/Data/DeadNet/Feb_12_EasySubset/TrainSet/preProc'
+imageParentDir = fullfile(matlabroot,'toolbox','nnet','nndemos','nndatasets','DigitDataset');
 
 %% --- Define dataset --- %%
 
@@ -83,6 +83,7 @@ switch datasetName
                 %fcLayerDims = [layerDims(end) ./ 2 .^(0:2), nClasses];
                 %fcLayerDims = [1024 ./ 2 .^(0:1), nClasses];
                 fcLayerDims = [512 ./ 2 .^(0:0), nClasses];                
+                %fcLayerDims = [256 ./ 2 .^(0:0), nClasses];                
                 %fcLayerDims = [32 ./ 2 .^(0:0), nClasses];                
                 inShape = size(input);
         end
@@ -175,9 +176,9 @@ end
 
 %% --- Train it ---- %%0
 
-nIters = 5e3;
-learningRate = 5e-4;
-momentum = 0.7;
+nIters = 2e3;
+learningRate = 1e-2;
+momentum = 0.9;
 batchSize = 16;
 
 
