@@ -7,8 +7,8 @@ doSubSample = false;
 resizeTo = 64;
 %resizeTo = [];
 
-%imageParentDir = '/media/hunter/Windows/shared/Data/DeadNet/Feb_12_EasySubset/TrainSet/preProc'
-imageParentDir = fullfile(matlabroot,'toolbox','nnet','nndemos','nndatasets','DigitDataset');
+imageParentDir = '/media/hunter/Windows/shared/Data/DeadNet/Feb_12_EasySubset/TrainSet/preProc'
+%imageParentDir = fullfile(matlabroot,'toolbox','nnet','nndemos','nndatasets','DigitDataset');
 
 %% --- Define dataset --- %%
 
@@ -55,7 +55,7 @@ switch datasetName
             %labelSubset = [1,8]
 
             %For quick tests, take sub-set of data
-            indSubSample = randsample(nSamples,64);
+            indSubSample = randsample(nSamples,2);
             nSamples = numel(indSubSample);            
             input = input(indSubSample);
             labels = labels(:,indSubSample);
@@ -79,7 +79,7 @@ switch datasetName
             case 'CNN'
                 input = single(cat(4,input{:}));
                 inputDims = size(input,3);
-                layerDims = [inputDims, round( 8 .* 2 .^ (0:3))];
+                layerDims = [inputDims, round( 12 .* 2 .^ (0:1))];
                 %fcLayerDims = [layerDims(end) ./ 2 .^(0:2), nClasses];
                 %fcLayerDims = [1024 ./ 2 .^(0:1), nClasses];
                 fcLayerDims = [512 ./ 2 .^(0:0), nClasses];                
@@ -88,9 +88,10 @@ switch datasetName
                 inShape = size(input);
         end
         
-        input = input - mean(input(:));
-        input = input / std(input(:));                                
-        
+        %input = input - mean(input(:));
+        %input = input / std(input(:));                                
+        input = input - 32767;
+        input = input * 2.5e-4;
         
         
         
@@ -113,7 +114,7 @@ k = 3; %Kernel width
 
 nLayers = numel(layerDims);
 layers = {};
-poolSize = 2;
+poolSize = 3;
 
 
 
