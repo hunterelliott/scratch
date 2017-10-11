@@ -1,10 +1,14 @@
 %% --- parameters ---- %%
 
-datasetName = 'MNIST'
+datasetName = 'ImageDataStore'
 networkType = 'CNN'
 doVerify = true;
 doSubSample = false;
 resizeTo = 64;
+%resizeTo = [];
+
+imageParentDir = '/media/hunter/Windows/shared/Data/DeadNet/Feb_12_EasySubset/TrainSet/preProc'
+%imageParentDir = fullfile(matlabroot,'toolbox','nnet','nndemos','nndatasets','DigitDataset');
 
 %% --- Define dataset --- %%
 
@@ -34,19 +38,18 @@ switch datasetName
 
         layerDims = [inputDims ./ 2 .^ (0:1), nClasses];
         
-    case 'MNIST'
+    case 'ImageDataStore'
         
-        mnistPath = fullfile(matlabroot,'toolbox','nnet','nndemos',...
-                            'nndatasets','DigitDataset');
-        mnistData = imageDatastore(mnistPath,...
+        
+        imageData = imageDatastore(imageParentDir,...
                 'IncludeSubfolders',true,'LabelSource','foldernames');
 
-        labelInd = double(mnistData.Labels);
+        labelInd = double(imageData.Labels);
         nClasses = numel(unique(labelInd));
         nSamples = numel(labelInd);
         labels = false(nClasses,nSamples);
         labels(sub2ind(size(labels),labelInd',1:nSamples)) = true;
-        input = mnistData.readall;
+        input = imageData.readall;
         
         if doSubSample
             %labelSubset = [1,8]
@@ -84,8 +87,8 @@ switch datasetName
                 inShape = size(input);
         end
         
-        input = input - 128;
-        input = input / 128;                                
+        input = input - mean(input(:));
+        input = input / std(input(:));                                
         
         
         
@@ -173,21 +176,22 @@ end
 %% --- Train it ---- %%0
 
 nIters = 5e3;
-learningRate = 1e-2;
-momentum = 0.9;
+learningRate = 5e-4;
+momentum = 0.7;
 batchSize = 16;
 
 
-lossPerIter = nan(nIters,1);
-accPerIter = nan(nIters,1);
+if ~exist('i','var')
+    %Allow interactive resume in cell mode
+    i = 0;
+    updates = {};
+    lossPerIter = nan(nIters,1);
+    accPerIter = nan(nIters,1);
+    %Randomize sample orderw
+    sampleInds = randperm(nSamples);
+end
 
-%Randomize sample order
-sampleInds = randperm(nSamples);
-
-%BUG?? what is going on when not all classes represented???
-updates = {};
-
-for i = 1:nIters
+for i = i+1:nIters
     
     %Get the batch
     currIndInd = mod((i-1)*batchSize+1:i*batchSize,nSamples)+1;
