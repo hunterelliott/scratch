@@ -3,12 +3,12 @@
 datasetName = 'ImageDataStore'
 networkType = 'CNN'
 doVerify = true;
-doSubSample = false;
 resizeTo = 64;
+useFraction = .2;%Use subset of data to conserve memory
 trainFraction = 0.8;
 %resizeTo = [];
 
-imageParentDir = '/media/hunter/Windows/shared/Data/DeadNet/Feb_12_EasySubset/TrainSet/preProc'
+%imageParentDir = '/media/hunter/Windows/shared/Data/DeadNet/Feb_12_EasySubset/TrainSet/preProc'
 imageParentDir = '/media/hunter/Windows/shared/Data/DeadNet/trainSet_Combined_Feb12_And_8_25_2016_allSickDie/train/preProc'
 %imageParentDir = fullfile(matlabroot,'toolbox','nnet','nndemos','nndatasets','DigitDataset');
 
@@ -46,6 +46,9 @@ switch datasetName
         imageData = imageDatastore(imageParentDir,...
                 'IncludeSubfolders',true,'LabelSource','foldernames');
 
+        %Take a subset, balanced accross labels, if requested
+        imageData = imageData.splitEachLabel(useFraction);
+            
         [imageData,imageDataVal] = imageData.splitEachLabel(trainFraction);
             
         labelInd = double(imageData.Labels);
@@ -59,26 +62,10 @@ switch datasetName
         labelsVal = false(nClasses,nSamplesVal);
         labelsVal(sub2ind(size(labelsVal),labelIndVal',1:nSamplesVal)) = true;
         
-        
+        tic
         input = imageData.readall;
         inputVal = imageDataVal.readall;
-        
-        if doSubSample
-            %labelSubset = [1,8]
-
-            %For quick tests, take sub-set of data
-            indSubSample = randsample(nSamples,2);
-            nSamples = numel(indSubSample);            
-            input = input(indSubSample);
-            labels = labels(:,indSubSample);
-            classPresent = sum(labels,2)>0;
-            labels = labels(classPresent,:);
-            [~,labelInd] = max(labels,[],1);
-            nClasses = size(labels,1);
-            
-            
-        end        
-        
+        toc
         
         switch networkType
             case 'MLP'
