@@ -5,9 +5,11 @@ networkType = 'CNN'
 doVerify = true;
 doSubSample = false;
 resizeTo = 64;
+trainFraction = 0.8;
 %resizeTo = [];
 
 imageParentDir = '/media/hunter/Windows/shared/Data/DeadNet/Feb_12_EasySubset/TrainSet/preProc'
+imageParentDir = '/media/hunter/Windows/shared/Data/DeadNet/trainSet_Combined_Feb12_And_8_25_2016_allSickDie/train/preProc'
 %imageParentDir = fullfile(matlabroot,'toolbox','nnet','nndemos','nndatasets','DigitDataset');
 
 %% --- Define dataset --- %%
@@ -44,12 +46,22 @@ switch datasetName
         imageData = imageDatastore(imageParentDir,...
                 'IncludeSubfolders',true,'LabelSource','foldernames');
 
+        [imageData,imageDataVal] = imageData.splitEachLabel(trainFraction);
+            
         labelInd = double(imageData.Labels);
         nClasses = numel(unique(labelInd));
         nSamples = numel(labelInd);
         labels = false(nClasses,nSamples);
         labels(sub2ind(size(labels),labelInd',1:nSamples)) = true;
+        
+        labelIndVal = double(imageDataVal.Labels);        
+        nSamplesVal = numel(labelIndVal);
+        labelsVal = false(nClasses,nSamplesVal);
+        labelsVal(sub2ind(size(labelsVal),labelIndVal',1:nSamplesVal)) = true;
+        
+        
         input = imageData.readall;
+        inputVal = imageDataVal.readall;
         
         if doSubSample
             %labelSubset = [1,8]
@@ -78,6 +90,7 @@ switch datasetName
                 
             case 'CNN'
                 input = single(cat(4,input{:}));
+                inputVal = single(cat(4,inputVal{:}));
                 inputDims = size(input,3);
                 layerDims = [inputDims, round( 12 .* 2 .^ (0:1))];
                 %fcLayerDims = [layerDims(end) ./ 2 .^(0:2), nClasses];
@@ -92,6 +105,8 @@ switch datasetName
         %input = input / std(input(:));                                
         input = input - 32767;
         input = input * 2.5e-4;
+        inputVal = inputVal - 32767;
+        inputVal = inputVal * 2.5e-4;
         
         
         
@@ -101,7 +116,7 @@ end
 if ~isempty(resizeTo)
     input = imresize(input,[resizeTo, resizeTo]);
     inShape = size(input);
-    
+    inputVal = imresize(inputVal,[resizeTo, resizeTo]);
 end
     
 %% --- Define network --- %%
@@ -178,7 +193,7 @@ end
 %% --- Train it ---- %%0
 
 nIters = 2e3;
-learningRate = 1e-2;
+learningRate = 5e-3;
 momentum = 0.9;
 batchSize = 16;
 
@@ -189,6 +204,8 @@ if ~exist('i','var')
     updates = {};
     lossPerIter = nan(nIters,1);
     accPerIter = nan(nIters,1);
+    lossPerIterVal = nan(nIters,1);
+    accPerIterVal = nan(nIters,1);
     %Randomize sample orderw
     sampleInds = randperm(nSamples);
 end
@@ -222,18 +239,38 @@ for i = i+1:nIters
     accPerIter(i) = double(nnz(predLabelInd(:) == currLabelInd(:))) / batchSize;
     
     if i == 1 || mod(i,10) == 0
-        disp(['Iteration ' num2str(i) ', loss = ' num2str(lossPerIter(i)) ', accuracy = ' num2str(accPerIter(i))])
+        disp(['Iteration ' num2str(i) ', loss = ' num2str(lossPerIter(i)) ', accuracy = ' num2str(accPerIter(i))])        
+        
+        
+    end
+    if i == 1 || mod(i,10) == 0
+        %Make predictions on the val set
+        activations = cianForward(layers,inputVal,labelsVal);
+        preds = activations{end-1};
+        losses = activations{end};
+        
+        %Log performance
+        lossPerIterVal(i) = mean(losses);
+        [~,predLabelInd] = max(preds,[],1);
+        [~,predLabel] = max(preds,[],1);
+        accPerIterVal(i) = double(nnz(predLabelInd(:) == labelIndVal(:))) / nSamplesVal;
+        disp(['Validation: Iteration ' num2str(i) ', loss = ' num2str(lossPerIterVal(i)) ', accuracy = ' num2str(accPerIterVal(i))])   
     end
 end
 
 %%
 
+
 cf = figure;
 subplot(2,1,1)
 semilogy(lossPerIter)
+hold on
+semilogy(find(~isnan(lossPerIterVal)),lossPerIterVal(~isnan(lossPerIterVal)))
 ylabel('Loss')
 subplot(2,1,2)
 plot(accPerIter)
+hold on
+plot(find(~isnan(accPerIterVal)),accPerIterVal(~isnan(accPerIterVal)))
 xlabel('Iteration')
 ylabel('Accuracy')
 %[preds,losses] = cianForward(layers,input,labels)
