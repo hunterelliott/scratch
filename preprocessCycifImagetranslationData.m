@@ -35,7 +35,7 @@ nPatchesWSI = (numel(xSplits)-1)*(numel(ySplits)-1);
 patch = zeros([imSize, nChan],'uint8');
 
 %%
-
+outName = cell(numel(xSplits)-1,numel(ySplits)-1);
 for ix = 1:numel(xSplits)-1
     for iy = 1:numel(ySplits)-1
         for iChan = 1:nChan
@@ -43,12 +43,19 @@ for ix = 1:numel(xSplits)-1
         end
         fracBg = nnz(all(patch>bgThresh,3))/prod(imSize);        
         if fracBg<maxBgFrac            
-            outName = [outputDir filesep 'im_x' num2str(xSplits(ix),'%05.0f') '_y' num2str(ySplits(iy),'%05.0f') '.png'];
-            imwrite(patch,outName)
+            outName{ix,iy} = [outputDir filesep 'im_x' num2str(xSplits(ix),'%05.0f') '_y' num2str(ySplits(iy),'%05.0f') '.png'];
+            %imwrite(patch,outName{ix,iy})
         end
     end
     disp(ix)
 end
+%Write TileConfiguration file for re-stitching the translated images
+wasWritten = reshape(~cellfun(@isempty,outName(:)),size(outName));
+[indX,indY] = find(wasWritten);
+writeTileConfigurationFile([outputDir filesep 'TileConfigurationFromMetadata.txt'],outName(wasWritten(:)),[xSplits(indX(:))',ySplits(indY(:))']);
+[~,imNames,~] = cellfun(@fileparts,outName(wasWritten(:)),'Unif',0);
+outTranslated = cellfun(@(x)(['fakeA_' x '.png']),imNames,'Unif',0);
+writeTileConfigurationFile([outputDir filesep 'TileConfigurationFromMetadataForTranslated.txt'],outTranslated,[xSplits(indX(:))',ySplits(indY(:))']);
 
 %% ---- Process  CycIF  data ---- %%
 
