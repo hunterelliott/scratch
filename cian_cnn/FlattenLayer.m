@@ -1,4 +1,6 @@
 classdef FlattenLayer < CIANLayer
+    %This defines a layer for connecting convolutional layers to
+    %fully-connected layers by vectorizing the feature maps.
    properties       
        inShape
    end
