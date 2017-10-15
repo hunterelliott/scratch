@@ -1,4 +1,6 @@
 classdef SoftmaxLayer < CIANLayer
+    %This layer converts arbitrary vector inputs into normalized output
+    %vectors which can be interpreted as predictions of probabilities accross classes.
    properties
        activations
        J
@@ -12,8 +14,7 @@ classdef SoftmaxLayer < CIANLayer
             obj.activations = output;
        end       
        function J = jacobian(obj)
-           [nActivations,nSamples] = size(obj.activations);
-           % Should probably try to fully vectorize this...
+           [nActivations,nSamples] = size(obj.activations);           
            J = zeros(nActivations,nActivations,nSamples);           
            for i = 1:nSamples
                [Sj,Si] = meshgrid(obj.activations(:,i),obj.activations(:,i));
