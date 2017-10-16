@@ -107,6 +107,10 @@ for iImage = 1:numel(ifImages)
     
 end
         
+%% -----  Creat CycIF tileconfig ---- %%
+
+createTileConfigurationFromMetadata(ifImageDir,'ShowPlot',true,'NumDims',2)
+
 
 %% Train / test split
 
