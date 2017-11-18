@@ -22,7 +22,8 @@ if vc.isOpened(): # try to get the first frame
 else:
     rval = False
 
-im_shape = (256,256,3)
+#im_shape = (256,256,3)
+im_shape = (512,512,3)
 
 cv2.imshow(in_window,im)
 
@@ -36,8 +37,8 @@ cv2.resizeWindow(pred_window,600,600)
 
 AE = Sequential()
 
-n_coder_layers = 4
-layer_base_dim = 8
+n_coder_layers = 8
+layer_base_dim = 4
 
 AE.add(Conv2D(im_shape[-1],3,strides=(2,2),input_shape=im_shape))
 
@@ -50,8 +51,10 @@ for layer_dim in layer_dims:
 for layer_dim in reversed([3] + layer_dims):
     AE.add(Conv2DTranspose(layer_dim,3,strides=(2,2),padding='same'))
 
-
-AE.compile(optimizer='rmsprop',loss='mean_squared_error')
+#rmsprop works well for <=8 layers and < 8 base dim
+#AE.compile(optimizer='rmsprop',loss='mean_squared_error')
+#adam works well with 8 layers 8 base dim
+AE.compile(optimizer='adam',loss='mean_squared_error')
 
 AE._make_predict_function()
 
@@ -70,6 +73,8 @@ def de_process_im(im):
     #im = cv2.resize(im.copy(),win_size[0:2])
     im = np.squeeze(im)
     im = (im + 1) * 127.5
+    im[im>255] = 255
+    im[im<0] = 0
     return im.astype(np.uint8)
 
 
@@ -90,7 +95,7 @@ def webcam_im_generator(model):
         with graph.as_default():
 
             im_pred = model.predict([im_out])
-            im_pred = de_process_im(im_predZ)
+            im_pred = de_process_im(im_pred)
             cv2.imshow(pred_window,im_pred)
         i_iter = i_iter + 1
         yield (im_out,im_out)
