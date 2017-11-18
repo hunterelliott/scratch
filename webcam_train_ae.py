@@ -4,12 +4,16 @@ import time
 
 from keras.models import Sequential
 from keras.layers import Conv2D, Conv2DTranspose
+from keras import backend as K
+
+
 
 
 cv2.startWindowThread()
 in_window = "input"
 cv2.namedWindow(in_window,cv2.WINDOW_KEEPRATIO)
-cv2.resizeWindow(in_window,600,600)
+win_size = (600,600,3)
+cv2.resizeWindow(in_window,win_size[0],win_size[1])
 
 vc = cv2.VideoCapture(0)
 
@@ -21,6 +25,14 @@ else:
 im_shape = (256,256,3)
 
 cv2.imshow(in_window,im)
+
+
+pred_window = "prediction"
+cv2.namedWindow(pred_window,cv2.WINDOW_KEEPRATIO)
+cv2.resizeWindow(pred_window,600,600)
+
+
+
 
 AE = Sequential()
 
@@ -38,24 +50,52 @@ for layer_dim in layer_dims:
 for layer_dim in reversed([3] + layer_dims):
     AE.add(Conv2DTranspose(layer_dim,3,strides=(2,2),padding='same'))
 
-AE.compile(optimizer='rmsprop',
-              loss='mean_squared_error',
-              metrics=['accuracy'])
+
+AE.compile(optimizer='rmsprop',loss='mean_squared_error')
+
+AE._make_predict_function()
+
+
+graph = K.get_session().graph
 
 
 
+#Define image pre-processing function
+def pre_process_im(im):
+    im = cv2.resize(im.copy(),im_shape[0:2])
+    im = (im.reshape((1,) +  im_shape).astype(np.float32) / 127.5) - 1
+    return im
 
-def webcam_im_generator():
+def de_process_im(im):
+    #im = cv2.resize(im.copy(),win_size[0:2])
+    im = np.squeeze(im)
+    im = (im + 1) * 127.5
+    return im.astype(np.uint8)
+
+
+i_iter = 0
+
+def webcam_im_generator(model):
+    global graph
     keep_fuckin_goin = True
+    i_iter = 0
     while keep_fuckin_goin:
         keep_fuckin_goin,im = vc.read()
         cv2.imshow(in_window, im)
         #im = im[:,:,::-1]
-        key = cv2.waitKey(50)
-        im_out = cv2.resize(im, im_shape[0:2]) - 128.0
+        #key = cv2.waitKey(50)
+        im_out = pre_process_im(im)
 
+
+        with graph.as_default():
+
+            im_pred = model.predict([im_out])
+            im_pred = de_process_im(im_predZ)
+            cv2.imshow(pred_window,im_pred)
+        i_iter = i_iter + 1
         yield (im_out,im_out)
 
-AE.fit_generator(webcam_im_generator(),steps_per_epoch=20,epochs=1e2)
+
+AE.fit_generator(webcam_im_generator(AE),steps_per_epoch=10,epochs=1e3)
 jkl=1
 
