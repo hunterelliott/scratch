@@ -1,5 +1,6 @@
 import os
 import cv2
+import random
 import numpy as np
 import time
 import queue
@@ -40,12 +41,12 @@ cv2.resizeWindow(pred_window,600,600)
 
 
 #If > 0 then train on images where input is missing a portion this large from center
-in_painting_size = 128
+in_painting_size = 0
 
 
 AE = Sequential()
 
-n_coder_layers = 8
+n_coder_layers = 3
 layer_base_dim = 6
 #n_coder_layers = 3
 #layer_base_dim = 8
@@ -53,6 +54,10 @@ layer_base_dim = 6
 #n_coder_layers = 4
 #layer_base_dim = 8
 
+randomize_queue = True
+
+
+assert not (randomize_queue and seq_len>1), "Randomizing queue with sequences is weird"
 
 AE.add(Conv2D(im_shape[-1],3,strides=(2,2),input_shape=input_shape))
 
@@ -95,7 +100,7 @@ def de_process_im(im):
 
 #Setup the queue for storing images
 #maxQ = 2 *  seq_len
-maxQ = 1
+maxQ = 600
 q = queue.Queue(maxsize=maxQ)
 
 i_iter = 0
@@ -115,8 +120,13 @@ def webcam_im_generator(model):
 
 
         im1 = np.concatenate([q.queue[i] for i in range(seq_len)],3)
+        if randomize_queue:
+            random.shuffle(q.queue)
         im2 = q.queue[-1]
-        im_for_pred = np.concatenate([q.queue[i] for i in range(maxQ-seq_len,maxQ)],3)
+        if not randomize_queue:
+            im_for_pred = np.concatenate([q.queue[i] for i in range(maxQ-seq_len,maxQ)],3)
+        else:
+            im_for_pred = im_latest
 
         oldest_im = q.get() #Keep images moving through the queue
         key = cv2.waitKey(33)
@@ -156,7 +166,7 @@ def webcam_im_generator(model):
         yield (im1,im2)
 
 
-#AE.fit_generator(webcam_im_generator(AE),steps_per_epoch=maxQ,epochs=5e3)
-AE.fit_generator(webcam_im_generator(AE),steps_per_epoch=30,epochs=5e3)
+AE.fit_generator(webcam_im_generator(AE),steps_per_epoch=maxQ,epochs=5e3)
+#AE.fit_generator(webcam_im_generator(AE),steps_per_epoch=30,epochs=5e3)
 jkl=1
 
