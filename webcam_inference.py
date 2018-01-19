@@ -13,18 +13,21 @@ else:
     rval = False
 
 #Define checkpoint directory and inference op
-check_dir = "/media/hunter/1E52113152110F61/shared/Training_Experiments/CycleGAN/horses2zebras/checkpoints"
+#check_dir = "/media/hunter/1E52113152110F61/shared/Training_Experiments/CycleGAN/horses2zebras/checkpoints"
 #check_dir = "/media/hunter/1E52113152110F61/shared/Training_Experiments/CycleGAN/maps2sat/checkpoints"
 #check_dir = "/media/hunter/1E52113152110F61/shared/Training_Experiments/CycleGAN/cityscapes/checkpoints"
-#For CycleGAN A to B
-pred_name = 'Model/g_A/t1:0'
-data_name = "input_A:0"
+check_dir = '/media/hunter/1E52113152110F61/shared/Training_Experiments/CycleGAN/map2cells/run1/checkpoints'
 checkpoint_file= tf.train.latest_checkpoint(check_dir)
-#For CycleGAN A to B
-#pred_name = 'Model/g_B/t1:0'
-#data_name = "input_B:0"
 
-os.environ["CUDA_VISIBLE_DEVICES"]="1"
+#For CycleGAN A to B
+#pred_name = 'Model/g_A/t1:0'
+#data_name = "input_A:0"
+
+#For CycleGAN A to B
+pred_name = 'Model/g_B/t1:0'
+data_name = "input_B:0"
+
+os.environ["CUDA_VISIBLE_DEVICES"]="0"
 
 #Define image pre-processing function
 def pre_process_im(im):

@@ -1,3 +1,4 @@
+import os
 import cv2
 import numpy as np
 import time
@@ -9,7 +10,7 @@ from keras import backend as K
 
 from itertools import combinations
 
-
+os.environ["CUDA_VISIBLE_DEVICES"]="1"
 
 #cv2.startWindowThread()
 in_window = "input"
@@ -27,7 +28,7 @@ else:
 #im_shape = (256,256,3)
 im_shape = (512,512,3)
 #Number of sequential frames to predict from
-seq_len = 2
+seq_len = 1
 input_shape = (im_shape[0],im_shape[1],im_shape[2]*seq_len)
 
 cv2.imshow(in_window,im)
@@ -38,16 +39,19 @@ cv2.namedWindow(pred_window,cv2.WINDOW_KEEPRATIO)
 cv2.resizeWindow(pred_window,600,600)
 
 
+#If > 0 then train on images where input is missing a portion this large from center
+in_painting_size = 128
 
 
 AE = Sequential()
 
-#n_coder_layers = 8
-#layer_base_dim = 6
+n_coder_layers = 8
+layer_base_dim = 6
 #n_coder_layers = 3
-#layer_base_dim = 6
-n_coder_layers = 2
-layer_base_dim = 8
+#layer_base_dim = 8
+
+#n_coder_layers = 4
+#layer_base_dim = 8
 
 
 AE.add(Conv2D(im_shape[-1],3,strides=(2,2),input_shape=input_shape))
@@ -65,6 +69,8 @@ for layer_dim in reversed([3] + layer_dims):
 #AE.compile(optimizer='rmsprop',loss='mean_squared_error')
 #adam works well with 8 layers 8 base dim
 AE.compile(optimizer='adam',loss='mean_squared_error')
+
+#AE.compile(optimizer='sgd',loss='mean_squared_error')
 
 AE._make_predict_function()
 
@@ -88,8 +94,8 @@ def de_process_im(im):
     return im.astype(np.uint8)
 
 #Setup the queue for storing images
-maxQ = 2 *  seq_len
-#maxQ = 30
+#maxQ = 2 *  seq_len
+maxQ = 1
 q = queue.Queue(maxsize=maxQ)
 
 i_iter = 0
@@ -141,10 +147,16 @@ def webcam_im_generator(model):
                 relDiff = meanDiff / edge_len[0]
                 print('==================' + str(relDiff) + '=============================')
 
+        if in_painting_size > 0:
+            i1 = int(input_shape[0] / 2 - in_painting_size)
+            i2 = int(input_shape[0] / 2 + in_painting_size)
+            im1[:,i1:i2,i1:i2] = 0
+
 
         yield (im1,im2)
 
 
-AE.fit_generator(webcam_im_generator(AE),steps_per_epoch=maxQ,epochs=5e3)
+#AE.fit_generator(webcam_im_generator(AE),steps_per_epoch=maxQ,epochs=5e3)
+AE.fit_generator(webcam_im_generator(AE),steps_per_epoch=30,epochs=5e3)
 jkl=1
 
