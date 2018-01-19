@@ -46,7 +46,7 @@ in_painting_size = 0
 
 AE = Sequential()
 
-n_coder_layers = 3
+n_coder_layers = 2
 layer_base_dim = 6
 #n_coder_layers = 3
 #layer_base_dim = 8
@@ -73,9 +73,9 @@ for layer_dim in reversed([3] + layer_dims):
 #rmsprop works well for <=8 layers and < 8 base dim
 #AE.compile(optimizer='rmsprop',loss='mean_squared_error')
 #adam works well with 8 layers 8 base dim
-AE.compile(optimizer='adam',loss='mean_squared_error')
+#AE.compile(optimizer='adam',loss='mean_squared_error')
 
-#AE.compile(optimizer='sgd',loss='mean_squared_error')
+AE.compile(optimizer='sgd',loss='mean_squared_error')
 
 AE._make_predict_function()
 
