@@ -55,7 +55,7 @@ layer_base_dim = 6
 #layer_base_dim = 8
 
 randomize_queue = True
-
+batch_size = 8
 
 assert not (randomize_queue and seq_len>1), "Randomizing queue with sequences is weird"
 
@@ -71,18 +71,18 @@ for layer_dim in reversed([3] + layer_dims):
     AE.add(Conv2DTranspose(layer_dim,4,strides=(2,2),padding='same'))
 
 #rmsprop works well for <=8 layers and < 8 base dim
-#AE.compile(optimizer='rmsprop',loss='mean_squared_error')
+AE.compile(optimizer='rmsprop',loss='mean_squared_error')
 #adam works well with 8 layers 8 base dim
 #AE.compile(optimizer='adam',loss='mean_squared_error')
 
-AE.compile(optimizer='sgd',loss='mean_squared_error')
+#AE.compile(optimizer='sgd',loss='mean_squared_error')
 
 AE._make_predict_function()
 
 
 graph = K.get_session().graph
 
-
+assert seq_len == 1, "I broke it and I don't care right now"
 
 #Define image pre-processing function
 def pre_process_im(im):
@@ -100,7 +100,7 @@ def de_process_im(im):
 
 #Setup the queue for storing images
 #maxQ = 2 *  seq_len
-maxQ = 600
+maxQ = 60
 q = queue.Queue(maxsize=maxQ)
 
 i_iter = 0
@@ -119,17 +119,21 @@ def webcam_im_generator(model):
             q.put(im_latest)
 
 
-        im1 = np.concatenate([q.queue[i] for i in range(seq_len)],3)
+        #im1 = np.concatenate([q.queue[i] for i in range(seq_len)],3)
+        im1 = np.concatenate([q.get() for i in range(batch_size)],0)
         if randomize_queue:
             random.shuffle(q.queue)
-        im2 = q.queue[-1]
+
+        #im2 = q.queue[-1]
+        im2 = im1
+
         if not randomize_queue:
             im_for_pred = np.concatenate([q.queue[i] for i in range(maxQ-seq_len,maxQ)],3)
         else:
             im_for_pred = im_latest
 
-        oldest_im = q.get() #Keep images moving through the queue
-        key = cv2.waitKey(33)
+        #oldest_im = q.get() #Keep images moving through the queue
+        key = cv2.waitKey(5)
 
         with graph.as_default():
 
@@ -166,7 +170,7 @@ def webcam_im_generator(model):
         yield (im1,im2)
 
 
-AE.fit_generator(webcam_im_generator(AE),steps_per_epoch=maxQ,epochs=5e3)
+AE.fit_generator(webcam_im_generator(AE),steps_per_epoch=maxQ,epochs=5e3,max_queue_size=128)
 #AE.fit_generator(webcam_im_generator(AE),steps_per_epoch=30,epochs=5e3)
 jkl=1
 
