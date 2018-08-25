@@ -48,6 +48,7 @@ AE = Sequential()
 
 n_coder_layers = 2
 layer_base_dim = 6
+kernel_size = 3
 #n_coder_layers = 3
 #layer_base_dim = 8
 
@@ -59,16 +60,16 @@ batch_size = 8
 
 assert not (randomize_queue and seq_len>1), "Randomizing queue with sequences is weird"
 
-AE.add(Conv2D(im_shape[-1],3,strides=(2,2),input_shape=input_shape))
-
 layer_dims = [layer_base_dim * 2 ** i_layer for i_layer in range(n_coder_layers)]
 
 # Encoder
-for layer_dim in layer_dims:
-    AE.add(Conv2D(layer_dim,4,strides=(2,2),padding='same'))
+
+AE.add(Conv2D(layer_dims[0],kernel_size,strides=(2,2),input_shape=input_shape,activation='relu'))
+for layer_dim in layer_dims[1::]:
+    AE.add(Conv2D(layer_dim,kernel_size,strides=(2,2),padding='same',activation='relu'))
 # Decoder
-for layer_dim in reversed([3] + layer_dims):
-    AE.add(Conv2DTranspose(layer_dim,4,strides=(2,2),padding='same'))
+for layer_dim in reversed([im_shape[-1]] + layer_dims[0:-1]):
+    AE.add(Conv2DTranspose(layer_dim,kernel_size,strides=(2,2),padding='same',activation='relu'))
 
 #rmsprop works well for <=8 layers and < 8 base dim
 AE.compile(optimizer='rmsprop',loss='mean_squared_error')
@@ -170,7 +171,7 @@ def webcam_im_generator(model):
         yield (im1,im2)
 
 
-AE.fit_generator(webcam_im_generator(AE),steps_per_epoch=maxQ,epochs=5e3,max_queue_size=128)
+AE.fit_generator(webcam_im_generator(AE),steps_per_epoch=maxQ,epochs=5e3,max_queue_size=128,workers=4)
 #AE.fit_generator(webcam_im_generator(AE),steps_per_epoch=30,epochs=5e3)
 jkl=1
 
