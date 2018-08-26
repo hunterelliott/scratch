@@ -171,7 +171,7 @@ def webcam_im_generator(model):
         yield (im1,im2)
 
 
-AE.fit_generator(webcam_im_generator(AE),steps_per_epoch=maxQ,epochs=5e3,max_queue_size=128,workers=4)
+
 #AE.fit_generator(webcam_im_generator(AE),steps_per_epoch=30,epochs=5e3)
 jkl=1
 
