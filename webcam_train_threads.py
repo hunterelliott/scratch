@@ -4,15 +4,10 @@ import time
 import random
 import numpy as np
 import time
-#import queue
 
 from keras.models import Sequential
 from keras.layers import Conv2D, Conv2DTranspose
-from keras import backend as K
-from multiprocessing import Process, Manager, Queue, Lock
-
-from itertools import combinations
-
+from multiprocessing import Process, Manager
 
 
 #cv2.startWindowThread()
@@ -28,42 +23,25 @@ if vc.isOpened(): # try to get the first frame
 else:
     rval = False
 
-#im_shape = (256,256,3)
 im_shape = (512,512,3)
-#Number of sequential frames to predict from
-seq_len = 1
 input_shape = (im_shape[0],im_shape[1],im_shape[2]*seq_len)
 
 cv2.imshow(in_window,im)
-
-
 pred_window = "prediction"
 cv2.namedWindow(pred_window,cv2.WINDOW_KEEPRATIO)
 cv2.resizeWindow(pred_window,600,600)
 
 
-#If > 0 then train on images where input is missing a portion this large from center
-in_painting_size = 0
-
-batch_size = 8
+batch_size = 4
+maxQ = 40960
 
 def build_model():
 
     AE = Sequential()
 
     n_coder_layers = 2
-    layer_base_dim = 6
+    layer_base_dim = 8
     kernel_size = 5
-    #n_coder_layers = 3
-    #layer_base_dim = 8
-
-    #n_coder_layers = 4
-    #layer_base_dim = 8
-
-    randomize_queue = True
-
-
-    assert not (randomize_queue and seq_len>1), "Randomizing queue with sequences is weird"
 
     layer_dims = [layer_base_dim * 2 ** i_layer for i_layer in range(n_coder_layers)]
 
@@ -90,9 +68,6 @@ def build_model():
     AE._make_predict_function()
 
     return AE
-#    graph = K.get_session().graph
-
-assert seq_len == 1, "I broke it and I don't care right now"
 
 #Define image pre-processing function
 def pre_process_im(im):
@@ -108,12 +83,6 @@ def de_process_im(im):
     im[im<0] = 0
     return im.astype(np.uint8)
 
-#Setup the queue for storing images
-#maxQ = 2 *  seq_len
-maxQ = 4096
-#q = Queue(maxsize=maxQ)
-
-i_iter = 0
 
 manager = Manager()
 pool = manager.list([])
@@ -129,7 +98,7 @@ def acquire_to_list(list):
         list.append((image, []))
 
         if len(list) > maxQ:
-            list.pop(0)
+            del(list[random.randint(0,maxQ-1)])
 
 
 def display_from_list(list, in_window, pred_window):
@@ -144,21 +113,8 @@ def display_from_list(list, in_window, pred_window):
             else:
                 cv2.imshow(in_window, de_process_im(curr_pair[0][0, :]))
                 cv2.imshow(pred_window, de_process_im(curr_pair[1][0,:]))
-                print("displaying prediction")
                 key = cv2.waitKey(5)
 
-
-# def predict_from_list(list, window, model):
-#
-#     key = 0
-
-#         while not(key==27):
-#             if len(list)>0:
-#
-#                 im_pred = list[-1]
-#                 with image_lock:
-#                     cv2.imshow(window, de_process_im(im_pred[0,:]))
-#                     key = cv2.waitKey(5)
 
 def train_on_list(list, batch_size):
 
@@ -186,10 +142,6 @@ def train_on_list(list, batch_size):
             print(i_iter)
 
 
-
-
-
-
 all_proc = []
 all_proc.append(Process(target=acquire_to_list, args=(pool,)))
 all_proc.append(Process(target=display_from_list, args=(pool, in_window, pred_window)))
@@ -198,8 +150,5 @@ all_proc.append(Process(target=train_on_list, args=(pool, batch_size)))
 
 
 [proc.start() for proc in all_proc]
-#AE.fit_generator(generate_train_from_list(pool, batch_size),steps_per_epoch=maxQ,epochs=5e3,max_queue_size=128)
 
 [proc.join() for proc in all_proc]
-
-j=1
