@@ -24,7 +24,7 @@ else:
     rval = False
 
 im_shape = (512,512,3)
-input_shape = (im_shape[0],im_shape[1],im_shape[2]*seq_len)
+input_shape = (im_shape[0],im_shape[1],im_shape[2])
 
 cv2.imshow(in_window,im)
 pred_window = "prediction"
@@ -34,6 +34,8 @@ cv2.resizeWindow(pred_window,600,600)
 
 batch_size = 4
 maxQ = 40960
+data_type = 'colorization'
+
 
 def build_model():
 
@@ -115,8 +117,17 @@ def display_from_list(list, in_window, pred_window):
                 cv2.imshow(pred_window, de_process_im(curr_pair[1][0,:]))
                 key = cv2.waitKey(5)
 
+def process_target_batch(in_batch, data_type):
 
-def train_on_list(list, batch_size):
+    if data_type == 'autoencoder':
+        out_batch = in_batch
+    elif data_type == 'colorization':
+        out_batch = in_batch
+        in_batch = np.tile(np.mean(out_batch,axis=3, keepdims=True), (1, 1, 1, im_shape[-1]))
+
+    return (in_batch, out_batch)
+
+def train_on_list(list, batch_size, data_type):
 
     os.environ["CUDA_VISIBLE_DEVICES"] = "1"
     print("Initializing training process...")
@@ -130,7 +141,9 @@ def train_on_list(list, batch_size):
         minibatch_ind = [random.randint(0,min(maxQ,len(list))-1) for _ in range(batch_size)]
         im_batch = np.concatenate([list[ind][0] for ind in minibatch_ind], axis=0)
 
-        model.train_on_batch(im_batch, im_batch)
+        x, y = process_target_batch(im_batch, data_type)
+
+        model.train_on_batch(x, y)
         i_iter += 1
         # Update the prediction for the current frame
         curr_input = list[-1][0]
@@ -145,7 +158,7 @@ def train_on_list(list, batch_size):
 all_proc = []
 all_proc.append(Process(target=acquire_to_list, args=(pool,)))
 all_proc.append(Process(target=display_from_list, args=(pool, in_window, pred_window)))
-all_proc.append(Process(target=train_on_list, args=(pool, batch_size)))
+all_proc.append(Process(target=train_on_list, args=(pool, batch_size, data_type)))
 #pred_proc = Process(target=predict_from_list, args=(pool, pred_window, AE))
 
 
